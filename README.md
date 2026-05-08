@@ -51,10 +51,16 @@ Este repositorio ya incluye `render.yaml`. Solo debes:
 
 Render usara:
 
-- `npm install` para build
+- `npm ci` para build limpio
 - `npm start` para iniciar
 - En plan Free, almacenamiento temporal en `/tmp` para `database.sqlite` y `sessions.sqlite`
 - Nota: en Free los datos pueden reiniciarse cuando el servicio se reinicia
+
+Si alguna vez subiste `node_modules` al repositorio, quitale seguimiento con:
+
+```bash
+git rm -r --cached node_modules
+```
 
 ## Estructura del proyecto
 
