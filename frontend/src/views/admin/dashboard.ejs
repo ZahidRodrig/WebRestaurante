@@ -1,0 +1,30 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+<h3>Dashboard administrador</h3>
+<div class="row g-3 my-2">
+  <div class="col-md-2"><div class="card p-3">Ingredientes: <b><%= summary.totalIngredients %></b></div></div>
+  <div class="col-md-2"><div class="card p-3">Categorias: <b><%= summary.totalCategories %></b></div></div>
+  <div class="col-md-2"><div class="card p-3">Usuarios: <b><%= summary.totalUsers %></b></div></div>
+  <div class="col-md-3"><div class="card p-3">Movimientos: <b><%= summary.totalMovements %></b></div></div>
+  <div class="col-md-3"><div class="card p-3">Bajo stock <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span>: <b><%= summary.lowStockCount %></b></div></div>
+</div>
+<div class="card mt-3">
+  <div class="card-body">
+    <h5>Ingredientes en alerta</h5>
+    <table class="table table-sm">
+      <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock</th><th>Minimo</th></tr></thead>
+      <tbody>
+        <% lowStock.forEach((item) => { %>
+        <tr class="low-stock">
+          <td><%= item.name %> <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span></td>
+          <td><%= item.category_name %></td>
+          <td><%= item.quantity %> <%= item.unit %></td>
+          <td><%= item.min_stock %> <%= item.unit %></td>
+        </tr>
+        <% }) %>
+        <% if (!lowStock.length) { %><tr><td colspan="4">Sin alertas activas.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include("../partials/footer") %>

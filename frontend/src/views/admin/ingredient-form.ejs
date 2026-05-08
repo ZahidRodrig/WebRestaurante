@@ -1,0 +1,42 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+<h3><%= ingredient ? "Editar ingrediente" : "Nuevo ingrediente" %></h3>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= ingredient ? `/admin/ingredientes/${ingredient.id}/editar` : '/admin/ingredientes' %>">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" type="text" name="name" value="<%= ingredient?.name || '' %>" required />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" name="category_id" required>
+            <% categories.forEach((cat) => { %>
+            <option value="<%= cat.id %>" <%= String(ingredient?.category_id) === String(cat.id) ? "selected" : "" %>><%= cat.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Cantidad actual</label>
+          <input class="form-control" type="number" min="0" step="0.1" name="quantity" value="<%= ingredient?.quantity ?? 0 %>" required />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Unidad</label>
+          <select class="form-select" name="unit" required>
+            <% ["kg", "litros", "piezas"].forEach((u) => { %>
+            <option value="<%= u %>" <%= ingredient?.unit === u ? "selected" : "" %>><%= u %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Stock minimo</label>
+          <input class="form-control" type="number" min="0" step="0.1" name="min_stock" value="<%= ingredient?.min_stock ?? 0 %>" required />
+        </div>
+      </div>
+      <button class="btn btn-primary mt-3" type="submit">Guardar</button>
+      <a href="/admin/ingredientes" class="btn btn-secondary mt-3">Volver</a>
+    </form>
+  </div>
+</div>
+<%- include("../partials/footer") %>

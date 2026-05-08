@@ -1,0 +1,39 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+<h3>Dashboard empleado</h3>
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Alertas de bajo stock</h5>
+        <ul class="list-group">
+          <% lowStock.forEach((item) => { %>
+          <li class="list-group-item low-stock">
+            <%= item.name %> <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span> - <%= item.quantity %> <%= item.unit %> (min: <%= item.min_stock %>)
+          </li>
+          <% }) %>
+          <% if (!lowStock.length) { %><li class="list-group-item">Sin alertas.</li><% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Mis ultimos movimientos</h5>
+        <ul class="list-group">
+          <% recentMovements.forEach((m) => { %>
+          <li class="list-group-item">
+            <span class="status-pill <%= m.type === 'entrada' ? 'status-pill-entrada' : 'status-pill-salida' %>">
+              <%= m.type === "entrada" ? "E +" : "S -" %> <%= m.type.toUpperCase() %>
+            </span>
+            <%= m.ingredient_name %> - <%= m.quantity %> <%= m.ingredient_unit %>
+          </li>
+          <% }) %>
+          <% if (!recentMovements.length) { %><li class="list-group-item">Sin movimientos aun.</li><% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include("../partials/footer") %>
