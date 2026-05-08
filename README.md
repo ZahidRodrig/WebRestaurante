@@ -53,7 +53,8 @@ Render usara:
 
 - `npm install` para build
 - `npm start` para iniciar
-- Disco persistente en `/opt/render/project/data` para `database.sqlite` y `sessions.sqlite`
+- En plan Free, almacenamiento temporal en `/tmp` para `database.sqlite` y `sessions.sqlite`
+- Nota: en Free los datos pueden reiniciarse cuando el servicio se reinicia
 
 ## Estructura del proyecto
 

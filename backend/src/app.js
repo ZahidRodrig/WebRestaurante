@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const sessionsDir =
   process.env.RENDER === "true"
-    ? "/opt/render/project/data"
+    ? "/tmp"
     : path.join(__dirname, "..", "..", "..");
 
 app.set("view engine", "ejs");

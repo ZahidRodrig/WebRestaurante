@@ -2,8 +2,9 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 
 const isRender = process.env.RENDER === "true";
+const renderDataPath = "/tmp/database.sqlite";
 const dbPath = isRender
-  ? "/opt/render/project/data/database.sqlite"
+  ? renderDataPath
   : path.join(__dirname, "..", "..", "..", "database.sqlite");
 
 const db = new sqlite3.Database(dbPath);
