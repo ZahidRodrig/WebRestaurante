@@ -10,6 +10,10 @@ const employeeRoutes = require("./routes/employeeRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const sessionsDir =
+  process.env.RENDER === "true"
+    ? "/opt/render/project/data"
+    : path.join(__dirname, "..", "..", "..");
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "..", "frontend", "src", "views"));
@@ -21,7 +25,7 @@ app.use(
   session({
     store: new SQLiteStore({
       db: "sessions.sqlite",
-      dir: path.join(__dirname, "..", "..", ".."),
+      dir: sessionsDir,
     }),
     secret: process.env.SESSION_SECRET || "inventario-restaurante-seguro",
     resave: false,
