@@ -5,7 +5,11 @@
   "main": "backend/src/app.js",
   "scripts": {
     "start": "node backend/src/app.js",
-    "dev": "node --watch backend/src/app.js"
+    "dev": "node --watch backend/src/app.js",
+    "postinstall": "node scripts/render-postinstall.js"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "keywords": [],
   "author": "",
