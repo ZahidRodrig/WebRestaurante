@@ -9,7 +9,7 @@
         <ul class="list-group">
           <% lowStock.forEach((item) => { %>
           <li class="list-group-item low-stock">
-            <%= item.name %> <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span> - <%= item.quantity %> <%= item.unit %> (min: <%= item.min_stock %>)
+            <%= item.name %> - <%= item.quantity %> <%= item.unit %> (min: <%= item.min_stock %>)
           </li>
           <% }) %>
           <% if (!lowStock.length) { %><li class="list-group-item">Sin alertas.</li><% } %>

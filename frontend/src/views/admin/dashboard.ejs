@@ -6,7 +6,7 @@
   <div class="col-md-2"><div class="card p-3">Categorias: <b><%= summary.totalCategories %></b></div></div>
   <div class="col-md-2"><div class="card p-3">Usuarios: <b><%= summary.totalUsers %></b></div></div>
   <div class="col-md-3"><div class="card p-3">Movimientos: <b><%= summary.totalMovements %></b></div></div>
-  <div class="col-md-3"><div class="card p-3">Bajo stock <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span>: <b><%= summary.lowStockCount %></b></div></div>
+  <div class="col-md-3"><div class="card p-3">Bajo stock: <b><%= summary.lowStockCount %></b></div></div>
 </div>
 <div class="card mt-3">
   <div class="card-body">
@@ -16,7 +16,7 @@
       <tbody>
         <% lowStock.forEach((item) => { %>
         <tr class="low-stock">
-          <td><%= item.name %> <span class="stock-flag" aria-label="Advertencia de bajo stock">⚠</span></td>
+          <td><%= item.name %></td>
           <td><%= item.category_name %></td>
           <td><%= item.quantity %> <%= item.unit %></td>
           <td><%= item.min_stock %> <%= item.unit %></td>

@@ -1,0 +1,48 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3><%= menuItem ? "Editar Platillo" : "Nuevo Platillo" %></h3>
+
+<div class="card" style="max-width: 600px;">
+  <div class="card-body">
+    <form method="POST" action="<%= menuItem ? `/admin/menu/${menuItem.id}/editar` : '/admin/menu' %>">
+      <div class="mb-3">
+        <label class="form-label">Nombre del Platillo</label>
+        <input class="form-control" type="text" name="name" value="<%= menuItem?.name || '' %>" required />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-control" name="description" rows="3"><%= menuItem?.description || '' %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Precio ($)</label>
+        <input class="form-control" type="number" step="0.01" name="price" value="<%= menuItem?.price ?? '' %>" required />
+      </div>
+
+      <% if (menuItem) { %>
+        <div class="mb-3">
+          <label class="form-label">Disponible</label>
+          <select class="form-select" name="is_available">
+            <option value="1" <%= menuItem.is_available === 1 ? 'selected' : '' %>>Sí</option>
+            <option value="0" <%= menuItem.is_available === 0 ? 'selected' : '' %>>No</option>
+          </select>
+        </div>
+      <% } %>
+
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <a href="/admin/menu" class="btn btn-secondary">Volver</a>
+    </form>
+  </div>
+</div>
+
+<% if (menuItem) { %>
+  <div class="mt-4">
+    <a href="/admin/recetas/<%= menuItem.id %>" class="btn btn-info">
+      Editar Receta
+    </a>
+  </div>
+<% } %>
+
+<%- include("../partials/footer") %>

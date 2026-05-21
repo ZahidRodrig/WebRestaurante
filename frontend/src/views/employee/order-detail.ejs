@@ -1,0 +1,86 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3>Orden #<%= order.id %></h3>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <strong>Detalles de la Orden</strong>
+      </div>
+      <div class="card-body">
+        <p>
+          <strong>Fecha:</strong> <%= new Date(order.created_at).toLocaleString('es-ES') %>
+        </p>
+        <p>
+          <strong>Registrada por:</strong> <%= order.user_name %>
+        </p>
+
+        <div class="border-top pt-3 mt-3">
+          <h6>Platillos Ordenados:</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Platillo</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% let totalAmount = 0; %>
+              <% items.forEach(item => { %>
+                <% const subtotal = item.quantity * item.price_at_sale; %>
+                <% totalAmount += subtotal; %>
+                <tr>
+                  <td><strong><%= item.menu_item_name %></strong></td>
+                  <td><%= item.description || '-' %></td>
+                  <td><%= item.quantity %></td>
+                  <td>$<%= item.price_at_sale.toFixed(2) %></td>
+                  <td><strong class="text-success">$<%= subtotal.toFixed(2) %></strong></td>
+                </tr>
+              <% }) %>
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td colspan="4" class="text-end"><strong>TOTAL:</strong></td>
+                <td><h5 class="text-success">$<%= totalAmount.toFixed(2) %></h5></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card bg-light">
+      <div class="card-header">
+        <strong>Información</strong>
+      </div>
+      <div class="card-body">
+        <p class="mb-2">
+          <strong>ID de Orden:</strong><br>
+          <code>#<%= order.id %></code>
+        </p>
+        <p class="mb-2">
+          <strong>Total de Items:</strong><br>
+          <span class="badge bg-info"><%= order.id %></span>
+        </p>
+        <p>
+          <strong>Estado:</strong><br>
+          <span class="badge bg-success">Completada</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a href="/empleado/ordenes" class="btn btn-secondary w-100">Volver</a>
+      <a href="/empleado/punto-de-venta" class="btn btn-primary w-100 mt-2">Nueva Orden</a>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

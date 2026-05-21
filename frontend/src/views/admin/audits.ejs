@@ -1,0 +1,46 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3>Auditoría de Inventario</h3>
+
+<a href="/admin/auditoria/nueva" class="btn btn-primary mb-3">Nueva Auditoría</a>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Ingrediente</th>
+        <th>Usuario</th>
+        <th>Stock Anterior</th>
+        <th>Stock Nuevo</th>
+        <th>Varianza</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (audits && audits.length > 0) { %>
+        <% audits.forEach(audit => { %>
+          <tr>
+            <td><%= audit.ingredient_name %></td>
+            <td><%= audit.user_name %></td>
+            <td><%= audit.previous_physical_stock %></td>
+            <td><%= audit.new_physical_stock %></td>
+            <td>
+              <% const isNegative = audit.variance < 0; %>
+              <span class="badge <%= isNegative ? 'bg-danger' : 'bg-success' %>">
+                <%= audit.variance.toFixed(2) %>
+              </span>
+            </td>
+            <td><%= new Date(audit.created_at).toLocaleString('es-ES') %></td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="6" class="text-center">No hay auditorías registradas.</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include("../partials/footer") %>

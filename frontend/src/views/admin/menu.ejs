@@ -1,0 +1,53 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3>Menú de Platillos</h3>
+
+<a href="/admin/menu/nuevo" class="btn btn-primary mb-3">Nuevo Platillo</a>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Precio</th>
+        <th>Ingredientes</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (menuItems && menuItems.length > 0) { %>
+        <% menuItems.forEach(item => { %>
+          <tr>
+            <td><strong><%= item.name %></strong></td>
+            <td><%= item.description || '-' %></td>
+            <td>$<%= item.price.toFixed(2) %></td>
+            <td><span class="badge bg-info"><%= item.total_ingredients %></span></td>
+            <td>
+              <% if (item.is_available) { %>
+                <span class="badge bg-success">Disponible</span>
+              <% } else { %>
+                <span class="badge bg-danger">No disponible</span>
+              <% } %>
+            </td>
+            <td>
+              <a href="/admin/recetas/<%= item.id %>" class="btn btn-sm btn-info" title="Editar receta">Receta</a>
+              <a href="/admin/menu/<%= item.id %>/editar" class="btn btn-sm btn-warning">Editar</a>
+              <form method="POST" action="/admin/menu/<%= item.id %>/eliminar" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este platillo?');">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="6" class="text-center">No hay platillos registrados.</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include("../partials/footer") %>

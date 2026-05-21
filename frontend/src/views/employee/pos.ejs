@@ -1,0 +1,160 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3>Punto de Venta</h3>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <strong>Menú Disponible</strong>
+      </div>
+      <div class="card-body">
+        <% if (menuItems && menuItems.length > 0) { %>
+          <div class="row g-2">
+            <% menuItems.forEach(item => { %>
+              <div class="col-md-6 mb-2">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6><%= item.name %></h6>
+                    <p class="small text-muted"><%= item.description || 'Sin descripción' %></p>
+                    <p class="small"><strong>Ingredientes:</strong> <%= item.ingredients_summary %></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong class="text-success">$<%= item.price.toFixed(2) %></strong>
+                      <input type="number" class="form-control form-control-sm" style="width: 80px; display:inline-block;" 
+                             data-item-id="<%= item.id %>" data-item-name="<%= item.name %>" 
+                             data-item-price="<%= item.price %>" min="0" value="0" 
+                             class="item-qty" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="text-muted text-center">No hay platillos disponibles. Contacta al administrador.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card sticky-top" style="top: 20px;">
+      <div class="card-header bg-success text-white">
+        <strong>Carrito de Compra</strong>
+      </div>
+      <div class="card-body">
+        <form id="order-form" method="POST" action="/empleado/orden">
+          <div id="cart-items">
+            <p class="text-muted text-center">El carrito está vacío</p>
+          </div>
+
+          <div class="border-top mt-3 pt-3">
+            <div class="d-flex justify-content-between mb-2">
+              <strong>Total Items:</strong>
+              <span id="total-items">0</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+              <strong>Monto Total:</strong>
+              <span class="text-success" id="total-amount">$0.00</span>
+            </div>
+            <button type="submit" class="btn btn-success w-100" id="checkout-btn" disabled>
+              Confirmar Orden
+            </button>
+            <button type="button" class="btn btn-outline-danger w-100 mt-2" id="clear-cart">
+              Limpiar Carrito
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let cart = {};
+
+  document.querySelectorAll('.item-qty').forEach(input => {
+    input.addEventListener('change', function() {
+      const itemId = this.dataset.itemId;
+      const itemName = this.dataset.itemName;
+      const itemPrice = parseFloat(this.dataset.itemPrice);
+      const qty = parseInt(this.value) || 0;
+
+      if (qty > 0) {
+        cart[itemId] = { name: itemName, price: itemPrice, qty: qty };
+      } else {
+        delete cart[itemId];
+      }
+
+      updateCart();
+    });
+  });
+
+  function updateCart() {
+    const cartItemsDiv = document.getElementById('cart-items');
+    const totalItemsSpan = document.getElementById('total-items');
+    const totalAmountSpan = document.getElementById('total-amount');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const orderForm = document.getElementById('order-form');
+
+    // Crear campos ocultos para el formulario
+    const existingInputs = orderForm.querySelectorAll('input[type="hidden"]');
+    existingInputs.forEach(input => input.remove());
+
+    let totalItems = 0;
+    let totalAmount = 0;
+    let cartHTML = '';
+
+    Object.entries(cart).forEach(([itemId, item]) => {
+      totalItems += item.qty;
+      totalAmount += item.price * item.qty;
+      cartHTML += `
+        <div class="d-flex justify-content-between mb-2">
+          <div>
+            <strong>${item.name}</strong>
+            <br><small>$${item.price.toFixed(2)} x${item.qty}</small>
+          </div>
+          <div class="text-end">
+            <strong>$${(item.price * item.qty).toFixed(2)}</strong>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart('${itemId}')">X</button>
+          </div>
+        </div>
+      `;
+
+      // Agregar input oculto para el formulario
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = `items[${itemId}]`;
+      input.value = item.qty;
+      orderForm.appendChild(input);
+    });
+
+    if (cartHTML === '') {
+      cartHTML = '<p class="text-muted text-center">El carrito está vacío</p>';
+    }
+
+    cartItemsDiv.innerHTML = cartHTML;
+    totalItemsSpan.textContent = totalItems;
+    totalAmountSpan.textContent = '$' + totalAmount.toFixed(2);
+    checkoutBtn.disabled = totalItems === 0;
+  }
+
+  function removeFromCart(itemId) {
+    delete cart[itemId];
+    document.querySelector(`input[data-item-id="${itemId}"]`).value = 0;
+    updateCart();
+  }
+
+  document.getElementById('clear-cart').addEventListener('click', function() {
+    if (confirm('¿Limpiar el carrito?')) {
+      cart = {};
+      document.querySelectorAll('.item-qty').forEach(input => {
+        input.value = 0;
+      });
+      updateCart();
+    }
+  });
+</script>
+
+<%- include("../partials/footer") %>

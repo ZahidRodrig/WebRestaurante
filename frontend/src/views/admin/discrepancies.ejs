@@ -1,0 +1,58 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3>Panel de Discrepancias</h3>
+
+<div class="alert alert-warning">
+  <strong>Importante:</strong> Se muestran solo ingredientes con varianza mayor al 5%. Estas discrepancias podrían indicar merma, pérdida o registro incorrecto.
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>Ingrediente</th>
+        <th>Categoría</th>
+        <th>Stock Teórico</th>
+        <th>Stock Físico</th>
+        <th>Varianza %</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (discrepancies && discrepancies.length > 0) { %>
+        <% discrepancies.forEach(item => { %>
+          <tr class="<%= Math.abs(item.variance_percentage) > 10 ? 'table-danger' : 'table-warning' %>">
+            <td><strong><%= item.name %></strong></td>
+            <td><%= item.category_name %></td>
+            <td><%= item.stock_theoretical.toFixed(2) %></td>
+            <td><%= item.stock_physical.toFixed(2) %></td>
+            <td>
+              <strong><%= item.variance_percentage %>%</strong>
+            </td>
+            <td>
+              <% if (Math.abs(item.variance_percentage) > 10) { %>
+                <span class="badge bg-danger">CRÍTICA</span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark">Revisar</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="6" class="text-center text-success">
+            <strong>Sin discrepancias detectadas</strong> - Todo el inventario está dentro de los parámetros normales.
+          </td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-3">
+  <a href="/admin/auditoria" class="btn btn-info">Realizar Nueva Auditoría</a>
+  <a href="/admin/dashboard" class="btn btn-secondary">Dashboard</a>
+</div>
+
+<%- include("../partials/footer") %>
