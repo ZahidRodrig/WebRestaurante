@@ -15,17 +15,19 @@
   </div>
 </div>
 <table class="table table-bordered">
-  <thead><tr><th>Nombre</th><th>Ingredientes</th><th>Acciones</th></tr></thead>
+  <thead><tr><th>Nombre</th><th>Ingredientes</th><th>Ver ingredientes</th><th>Acciones</th></tr></thead>
   <tbody>
     <% categories.forEach((c) => { %>
     <tr>
       <td>
-        <form action="/admin/categorias/<%= c.id %>/editar" method="POST" class="d-flex gap-2">
-          <input class="form-control form-control-sm" name="name" value="<%= c.name %>" required />
-          <button class="btn btn-sm btn-warning">Actualizar</button>
+        <form action="/admin/categorias/<%= c.id %>/editar" method="POST" class="d-flex gap-2 auto-submit-form">
+          <input class="form-control form-control-sm auto-submit-input" name="name" value="<%= c.name %>" required />
         </form>
       </td>
       <td><%= c.ingredients_count %></td>
+      <td>
+        <a href="/admin/ingredientes?category=<%= c.id %>" class="btn btn-sm btn-info">Ver ingredientes</a>
+      </td>
       <td>
         <form action="/admin/categorias/<%= c.id %>/eliminar" method="POST">
           <button class="btn btn-sm btn-danger">Eliminar</button>

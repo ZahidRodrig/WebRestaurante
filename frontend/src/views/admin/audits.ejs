@@ -1,7 +1,21 @@
 <%- include("../partials/header") %>
 <%- include("../partials/menu") %>
 
-<h3>Auditoría de Inventario</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3>Auditoría de Inventario</h3>
+    <p class="mb-0 text-muted small">
+      Las cantidades se muestran siempre en la unidad base del ingrediente: gramos (g), mililitros (ml) o piezas (pcs).
+      Esto convierte pesos en kg a g y volúmenes en litros a ml para un conteo más preciso.
+    </p>
+  </div>
+  <div class="w-auto">
+    <select id="unit-system-select" class="form-select form-select-sm">
+      <option value="metric">Métrico</option>
+      <option value="imperial">Imperial</option>
+    </select>
+  </div>
+</div>
 
 <a href="/admin/auditoria/nueva" class="btn btn-primary mb-3">Nueva Auditoría</a>
 
@@ -23,12 +37,12 @@
           <tr>
             <td><%= audit.ingredient_name %></td>
             <td><%= audit.user_name %></td>
-            <td><%= audit.previous_physical_stock %></td>
-            <td><%= audit.new_physical_stock %></td>
-            <td>
+            <td class="unit-cell" data-base-unit="<%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %>" data-raw-value="<%= audit.previous_physical_stock %>"><span class="unit-value"><%= audit.previous_physical_stock.toFixed(2) %></span> <span class="unit-unit"><%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %></span></td>
+            <td class="unit-cell" data-base-unit="<%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %>" data-raw-value="<%= audit.new_physical_stock %>"><span class="unit-value"><%= audit.new_physical_stock.toFixed(2) %></span> <span class="unit-unit"><%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %></span></td>
+            <td class="unit-cell" data-base-unit="<%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %>" data-raw-value="<%= audit.variance %>">
               <% const isNegative = audit.variance < 0; %>
               <span class="badge <%= isNegative ? 'bg-danger' : 'bg-success' %>">
-                <%= audit.variance.toFixed(2) %>
+                <span class="unit-value"><%= audit.variance.toFixed(2) %></span> <span class="unit-unit"><%= audit.base_unit || (audit.ingredient_unit === 'kg' ? 'g' : audit.ingredient_unit === 'L' ? 'ml' : audit.ingredient_unit || 'pcs') %></span>
               </span>
             </td>
             <td><%= new Date(audit.created_at).toLocaleString('es-ES') %></td>

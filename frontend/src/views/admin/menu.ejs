@@ -35,8 +35,8 @@
             <td>
               <a href="/admin/recetas/<%= item.id %>" class="btn btn-sm btn-info" title="Editar receta">Receta</a>
               <a href="/admin/menu/<%= item.id %>/editar" class="btn btn-sm btn-warning">Editar</a>
-              <form method="POST" action="/admin/menu/<%= item.id %>/eliminar" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este platillo?');">Eliminar</button>
+              <form method="POST" action="/admin/menu/<%= item.id %>/eliminar" style="display:inline;" class="needs-confirm">
+                <button type="submit" class="btn btn-sm btn-danger" data-confirm="¿Eliminar este platillo?">Eliminar</button>
               </form>
             </td>
           </tr>

@@ -1,6 +1,16 @@
 <%- include("../partials/header") %>
 <%- include("../partials/menu") %>
-<h3>Inventario</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Inventario</h3>
+  <div class="d-flex gap-2 align-items-center">
+    <select id="unit-system-select" class="form-select form-select-sm">
+      <option value="metric">Métrico</option>
+      <option value="imperial">Imperial</option>
+    </select>
+  </div>
+</div>
+
+<div class="table-responsive">
 <table class="table table-bordered table-hover">
   <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock</th><th>Minimo</th><th>Movimiento</th></tr></thead>
   <tbody>
@@ -13,8 +23,8 @@
         <% } %>
       </td>
       <td><%= item.category_name %></td>
-      <td><%= item.quantity %> <%= item.unit %></td>
-      <td><%= item.min_stock %> <%= item.unit %></td>
+      <td class="unit-cell" data-base-unit="<%= item.unit %>" data-raw-value="<%= item.quantity %>"><span class="unit-value"><%= item.quantity %></span> <span class="unit-unit"><%= item.unit %></span></td>
+      <td class="unit-cell" data-base-unit="<%= item.unit %>" data-raw-value="<%= item.min_stock %>"><span class="unit-value"><%= item.min_stock %></span> <span class="unit-unit"><%= item.unit %></span></td>
       <td>
         <form action="/empleado/movimiento" method="POST" class="d-flex gap-2 flex-wrap">
           <input type="hidden" name="ingredient_id" value="<%= item.id %>" />
@@ -31,4 +41,5 @@
     <% }) %>
   </tbody>
 </table>
+</div>
 <%- include("../partials/footer") %>

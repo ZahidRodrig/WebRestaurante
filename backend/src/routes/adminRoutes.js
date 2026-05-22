@@ -394,7 +394,7 @@ router.post("/recetas/:menu_item_id/quitar-ingrediente/:recipe_ingredient_id", a
 router.get("/auditoria", async (req, res) => {
   const audits = await inventoryDb.all(
     `
-    SELECT ia.*, i.name AS ingredient_name, u.name AS user_name
+    SELECT ia.*, i.name AS ingredient_name, i.base_unit, i.unit AS ingredient_unit, u.name AS user_name
     FROM inventory_audits ia
     JOIN ingredients i ON i.id = ia.ingredient_id
     JOIN users u ON u.id = ia.user_id
@@ -458,6 +458,8 @@ router.get("/dashboard/discrepancias", async (req, res) => {
       i.name,
       i.stock_theoretical,
       i.stock_physical,
+      i.base_unit,
+      i.unit AS ingredient_unit,
       ROUND((i.stock_physical - i.stock_theoretical) / NULLIF(i.stock_theoretical, 0) * 100, 2) AS variance_percentage,
       c.name AS category_name
     FROM ingredients i

@@ -1,12 +1,22 @@
 <%- include("../partials/header") %>
 <%- include("../partials/menu") %>
 
-<h3>Panel de Discrepancias</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Panel de Discrepancias</h3>
+  <div class="w-auto">
+    <select id="unit-system-select" class="form-select form-select-sm">
+      <option value="metric">Métrico</option>
+      <option value="imperial">Imperial</option>
+    </select>
+  </div>
+</div>
 
 <div class="alert alert-warning">
   <strong>Importante:</strong> Se muestran solo ingredientes con varianza mayor al 5%. Estas discrepancias podrían indicar merma, pérdida o registro incorrecto.
 </div>
-
+<div class="alert alert-info mb-3">
+  <small>Los valores se presentan en la unidad base del ingrediente: g, ml o pcs. Kg se convierte a g y L se convierte a ml para mayor precisión.</small>
+</div>
 <div class="table-responsive">
   <table class="table table-striped">
     <thead class="table-dark">
@@ -25,8 +35,8 @@
           <tr class="<%= Math.abs(item.variance_percentage) > 10 ? 'table-danger' : 'table-warning' %>">
             <td><strong><%= item.name %></strong></td>
             <td><%= item.category_name %></td>
-            <td><%= item.stock_theoretical.toFixed(2) %></td>
-            <td><%= item.stock_physical.toFixed(2) %></td>
+            <td class="unit-cell" data-base-unit="<%= item.base_unit || (item.ingredient_unit === 'kg' ? 'g' : item.ingredient_unit === 'L' ? 'ml' : item.ingredient_unit || 'pcs') %>" data-raw-value="<%= item.stock_theoretical %>"><span class="unit-value"><%= item.stock_theoretical.toFixed(2) %></span> <span class="unit-unit"><%= item.base_unit || (item.ingredient_unit === 'kg' ? 'g' : item.ingredient_unit === 'L' ? 'ml' : item.ingredient_unit || 'pcs') %></span></td>
+            <td class="unit-cell" data-base-unit="<%= item.base_unit || (item.ingredient_unit === 'kg' ? 'g' : item.ingredient_unit === 'L' ? 'ml' : item.ingredient_unit || 'pcs') %>" data-raw-value="<%= item.stock_physical %>"><span class="unit-value"><%= item.stock_physical.toFixed(2) %></span> <span class="unit-unit"><%= item.base_unit || (item.ingredient_unit === 'kg' ? 'g' : item.ingredient_unit === 'L' ? 'ml' : item.ingredient_unit || 'pcs') %></span></td>
             <td>
               <strong><%= item.variance_percentage %>%</strong>
             </td>
@@ -47,8 +57,8 @@
         </tr>
       <% } %>
     </tbody>
-  </table>
-</div>
+    </table>
+  </div>
 
 <div class="mt-3">
   <a href="/admin/auditoria" class="btn btn-info">Realizar Nueva Auditoría</a>

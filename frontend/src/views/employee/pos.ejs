@@ -21,10 +21,9 @@
                     <p class="small"><strong>Ingredientes:</strong> <%= item.ingredients_summary %></p>
                     <div class="d-flex justify-content-between align-items-center">
                       <strong class="text-success">$<%= item.price.toFixed(2) %></strong>
-                      <input type="number" class="form-control form-control-sm" style="width: 80px; display:inline-block;" 
-                             data-item-id="<%= item.id %>" data-item-name="<%= item.name %>" 
-                             data-item-price="<%= item.price %>" min="0" value="0" 
-                             class="item-qty" />
+                      <input type="number" class="form-control form-control-sm item-qty" style="width: 80px; display:inline-block;"
+                             data-item-id="<%= item.id %>" data-item-name="<%= item.name %>"
+                             data-item-price="<%= item.price %>" min="0" value="0" />
                     </div>
                   </div>
                 </div>
@@ -75,7 +74,7 @@
   let cart = {};
 
   document.querySelectorAll('.item-qty').forEach(input => {
-    input.addEventListener('change', function() {
+    const onQtyChange = function() {
       const itemId = this.dataset.itemId;
       const itemName = this.dataset.itemName;
       const itemPrice = parseFloat(this.dataset.itemPrice);
@@ -88,7 +87,9 @@
       }
 
       updateCart();
-    });
+    };
+    input.addEventListener('change', onQtyChange);
+    input.addEventListener('input', onQtyChange);
   });
 
   function updateCart() {
@@ -147,13 +148,17 @@
   }
 
   document.getElementById('clear-cart').addEventListener('click', function() {
-    if (confirm('¿Limpiar el carrito?')) {
+    const btn = this;
+    // use UI confirmation modal
+    const message = '¿Limpiar el carrito?';
+    window.showConfirm(message).then((ok) => {
+      if (!ok) return;
       cart = {};
       document.querySelectorAll('.item-qty').forEach(input => {
         input.value = 0;
       });
       updateCart();
-    }
+    });
   });
 </script>
 

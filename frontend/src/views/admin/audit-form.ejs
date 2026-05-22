@@ -11,8 +11,8 @@
         <select class="form-select" name="ingredient_id" id="ingredient_select" required>
           <option value="">Selecciona un ingrediente...</option>
           <% ingredients.forEach(ing => { %>
-            <option value="<%= ing.id %>" data-theoretical="<%= ing.stock_theoretical %>" data-physical="<%= ing.stock_physical %>">
-              <%= ing.name %>
+            <option value="<%= ing.id %>" data-theoretical="<%= ing.stock_theoretical %>" data-physical="<%= ing.stock_physical %>" data-baseunit="<%= ing.base_unit %>">
+              <%= ing.name %> (<%= ing.base_unit %>)
             </option>
           <% }) %>
         </select>
@@ -35,7 +35,10 @@
 
       <div class="mb-3">
         <label class="form-label">Stock Físico Nuevo (Conteo Manual)</label>
-        <input class="form-control" type="number" step="0.01" name="new_physical_stock" required />
+        <div class="input-group">
+          <input class="form-control" type="number" step="0.01" name="new_physical_stock" id="new_physical_stock" required />
+          <span class="input-group-text" id="unit-label">unidad</span>
+        </div>
         <small class="form-text text-muted">Ingresa en la unidad base del ingrediente</small>
       </div>
 
@@ -54,16 +57,25 @@
   const theoreticalDisplay = document.getElementById('theoretical-stock');
   const previousPhysicalDisplay = document.getElementById('previous-physical');
   const newPhysicalInput = document.querySelector('input[name="new_physical_stock"]');
+  const unitLabel = document.getElementById('unit-label');
   const varianceDisplay = document.getElementById('variance-display');
   const varianceValue = document.getElementById('variance-value');
+
+  function formatStock(value, unit) {
+    return value !== 'null' && value !== undefined && value !== null
+      ? `${value} ${unit}`
+      : '-';
+  }
 
   ingredientSelect.addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     const theoretical = selected.dataset.theoretical;
     const physical = selected.dataset.physical;
+    const baseUnit = selected.dataset.baseunit || 'unidad';
 
-    theoreticalDisplay.textContent = theoretical !== 'null' ? theoretical : '-';
-    previousPhysicalDisplay.textContent = physical !== 'null' ? physical : '-';
+    theoreticalDisplay.textContent = formatStock(theoretical, baseUnit);
+    previousPhysicalDisplay.textContent = formatStock(physical, baseUnit);
+    unitLabel.textContent = baseUnit;
     newPhysicalInput.value = '';
     varianceDisplay.style.display = 'none';
   });

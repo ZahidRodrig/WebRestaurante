@@ -26,8 +26,8 @@
                   <td><%= ing.name %></td>
                   <td><%= ing.quantity_required %> <%= ing.base_unit %></td>
                   <td>
-                    <form method="POST" action="/admin/recetas/<%= menuItem.id %>/quitar-ingrediente/<%= ing.recipe_ingredient_id %>" style="display:inline;">
-                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Quitar este ingrediente?');">Quitar</button>
+                    <form method="POST" action="/admin/recetas/<%= menuItem.id %>/quitar-ingrediente/<%= ing.recipe_ingredient_id %>" style="display:inline;" class="needs-confirm">
+                      <button type="submit" class="btn btn-sm btn-danger" data-confirm="¿Quitar este ingrediente?">Quitar</button>
                     </form>
                   </td>
                 </tr>

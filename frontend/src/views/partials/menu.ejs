@@ -1,7 +1,7 @@
-<div class="mb-3">
+<div class="mb-3" id="main-menu-container">
   <% const isActive = typeof isActivePath === "function" ? isActivePath : () => false; %>
   <% if (user && user.role === "admin") { %>
-  <div class="btn-group flex-wrap">
+  <div class="btn-group flex-wrap" id="main-menu">
     <a href="/admin/dashboard" class="btn <%= isActive('/admin/dashboard') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/dashboard') ? 'page' : 'false' %>">Dashboard</a>
     <a href="/admin/ingredientes" class="btn <%= isActive('/admin/ingredientes') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/ingredientes') ? 'page' : 'false' %>">Ingredientes</a>
     <a href="/admin/categorias" class="btn <%= isActive('/admin/categorias') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/categorias') ? 'page' : 'false' %>">Categorías</a>
@@ -13,7 +13,7 @@
     <a href="/admin/movimientos" class="btn <%= isActive('/admin/movimientos') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/movimientos') ? 'page' : 'false' %>">Movimientos</a>
   </div>
   <% } else if (user) { %>
-  <div class="btn-group flex-wrap">
+  <div class="btn-group flex-wrap" id="main-menu">
     <a href="/empleado/dashboard" class="btn <%= isActive('/empleado/dashboard') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/dashboard') ? 'page' : 'false' %>">Dashboard</a>
     <a href="/empleado/punto-de-venta" class="btn <%= isActive('/empleado/punto-de-venta') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/punto-de-venta') ? 'page' : 'false' %>">POS</a>
     <a href="/empleado/ordenes" class="btn <%= isActive('/empleado/ordenes') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/ordenes') ? 'page' : 'false' %>">Órdenes</a>
@@ -22,3 +22,10 @@
   </div>
   <% } %>
 </div>
+<style>
+  /* hide menu on small screens; will be toggled by JS */
+  @media (max-width: 767.98px) {
+    #main-menu { display: none; }
+    #main-menu.show { display: flex; flex-wrap:wrap; }
+  }
+</style>

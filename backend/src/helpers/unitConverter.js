@@ -36,13 +36,45 @@ const UNIT_CATEGORIES = {
   discrete: ["pcs"],
 };
 
+// Mapear sinónimos (español, variantes) a las unidades estándar usadas arriba
+const UNIT_ALIASES = {
+  litros: "L",
+  litro: "L",
+  l: "L",
+  ml: "ml",
+  mililitros: "ml",
+  mililitro: "ml",
+  gramos: "g",
+  gramo: "g",
+  g: "g",
+  kilogramos: "kg",
+  kilogramo: "kg",
+  kg: "kg",
+  piezas: "pcs",
+  pieza: "pcs",
+  pcs: "pcs",
+};
+
+function normalizeUnit(unit) {
+  if (!unit && unit !== 0) return unit;
+  const u = String(unit).trim();
+  // If exact match in conversion factors, return as-is
+  if (u in CONVERSION_FACTORS) return u;
+  const lower = u.toLowerCase();
+  if (lower in UNIT_ALIASES) return UNIT_ALIASES[lower];
+  // Accept uppercase L as liters
+  if (lower === "l") return "L";
+  return u;
+}
+
 /**
  * Valida si una unidad es válida
  * @param {string} unit - Unidad a validar
  * @returns {boolean}
  */
 function isValidUnit(unit) {
-  return unit in CONVERSION_FACTORS;
+  const u = normalizeUnit(unit);
+  return u in CONVERSION_FACTORS;
 }
 
 /**
@@ -51,8 +83,9 @@ function isValidUnit(unit) {
  * @returns {string|null} Categoría o null si no existe
  */
 function getUnitCategory(unit) {
+  const u = normalizeUnit(unit);
   for (const [category, units] of Object.entries(UNIT_CATEGORIES)) {
-    if (units.includes(unit)) {
+    if (units.includes(u)) {
       return category;
     }
   }
@@ -68,15 +101,18 @@ function getUnitCategory(unit) {
  * @throws {Error} Si las unidades son incompatibles
  */
 function convert(quantity, fromUnit, toUnit) {
-  if (!isValidUnit(fromUnit)) {
+  const f = normalizeUnit(fromUnit);
+  const t = normalizeUnit(toUnit);
+
+  if (!isValidUnit(f)) {
     throw new Error(`Unidad origen inválida: ${fromUnit}`);
   }
-  if (!isValidUnit(toUnit)) {
+  if (!isValidUnit(t)) {
     throw new Error(`Unidad destino inválida: ${toUnit}`);
   }
 
-  const fromCategory = getUnitCategory(fromUnit);
-  const toCategory = getUnitCategory(toUnit);
+  const fromCategory = getUnitCategory(f);
+  const toCategory = getUnitCategory(t);
 
   if (fromCategory !== toCategory) {
     throw new Error(
@@ -84,13 +120,13 @@ function convert(quantity, fromUnit, toUnit) {
     );
   }
 
-  if (fromUnit === toUnit) {
+  if (f === t) {
     return quantity;
   }
 
   // Convertir a unidad base de la categoría, luego a unidad destino
-  const toBase = quantity * CONVERSION_FACTORS[fromUnit];
-  const fromBase = toBase / CONVERSION_FACTORS[toUnit];
+  const toBase = quantity * CONVERSION_FACTORS[f];
+  const fromBase = toBase / CONVERSION_FACTORS[t];
 
   return Math.round(fromBase * 100000) / 100000; // Redondear a 5 decimales
 }
@@ -102,13 +138,14 @@ function convert(quantity, fromUnit, toUnit) {
  * @returns {number} Cantidad en unidad base
  */
 function toBaseUnit(quantity, unit) {
-  const category = getUnitCategory(unit);
+  const u = normalizeUnit(unit);
+  const category = getUnitCategory(u);
   if (!category) {
     throw new Error(`Unidad inválida: ${unit}`);
   }
 
   const baseUnit = getBaseUnitByCategory(category);
-  return convert(quantity, unit, baseUnit);
+  return convert(quantity, u, baseUnit);
 }
 
 /**
@@ -118,13 +155,14 @@ function toBaseUnit(quantity, unit) {
  * @returns {number} Cantidad convertida
  */
 function fromBaseUnit(quantity, unit) {
-  const category = getUnitCategory(unit);
+  const u = normalizeUnit(unit);
+  const category = getUnitCategory(u);
   if (!category) {
     throw new Error(`Unidad inválida: ${unit}`);
   }
 
   const baseUnit = getBaseUnitByCategory(category);
-  return convert(quantity, baseUnit, unit);
+  return convert(quantity, baseUnit, u);
 }
 
 /**
@@ -157,7 +195,8 @@ function getUnitsInCategory(category) {
  * @returns {string} Categoría del base_unit
  */
 function validateAndGetCategory(baseUnit) {
-  const category = getUnitCategory(baseUnit);
+  const u = normalizeUnit(baseUnit);
+  const category = getUnitCategory(u);
   if (!category) {
     throw new Error(`Unidad base inválida: ${baseUnit}`);
   }
