@@ -178,3 +178,21 @@ function initUnitSystemToggle() {
 }
 
 initUnitSystemToggle();
+
+// --- APLICAR REDONDEO MATH.CEIL() AL STOCK TEÓRICO EN VISUALIZACIÓN ---
+// Encuentra todos los elementos con data-attribute para stock teórico y aplica Math.ceil()
+function applyCeilToTheoreticalStock() {
+  document.querySelectorAll('[data-stock-type="theoretical"]').forEach((cell) => {
+    const rawValue = parseFloat(cell.dataset.rawValue);
+    if (!Number.isNaN(rawValue)) {
+      const ceiledValue = Math.ceil(rawValue);
+      const valueEl = cell.querySelector('.stock-value');
+      if (valueEl) {
+        valueEl.textContent = ceiledValue.toString();
+      }
+    }
+  });
+}
+
+// Ejecutar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', applyCeilToTheoreticalStock);

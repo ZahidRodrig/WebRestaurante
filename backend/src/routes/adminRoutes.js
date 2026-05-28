@@ -14,7 +14,7 @@ router.get("/dashboard", async (req, res) => {
       (SELECT COUNT(*) FROM categories) AS totalCategories,
       (SELECT COUNT(*) FROM users) AS totalUsers,
       (SELECT COUNT(*) FROM movements) AS totalMovements,
-      (SELECT COUNT(*) FROM ingredients WHERE quantity < min_stock) AS lowStockCount
+      (SELECT COUNT(*) FROM low_stock_alerts WHERE status = 'active') AS lowStockCount
   `
   );
 
@@ -23,7 +23,7 @@ router.get("/dashboard", async (req, res) => {
     SELECT i.*, c.name AS category_name
     FROM ingredients i
     JOIN categories c ON c.id = i.category_id
-    WHERE i.quantity < i.min_stock
+    WHERE i.stock_physical < i.min_stock
     ORDER BY i.name
   `
   );
@@ -430,7 +430,7 @@ router.post("/auditoria", async (req, res) => {
   const variance = newPhysical - ingredient.stock_physical;
 
   // Registrar en auditoría
-  await inventoryDb.run(
+  const auditResult = await inventoryDb.run(
     `
     INSERT INTO inventory_audits (ingredient_id, user_id, previous_physical_stock, new_physical_stock, variance)
     VALUES (?, ?, ?, ?, ?)
@@ -443,6 +443,32 @@ router.post("/auditoria", async (req, res) => {
     "UPDATE ingredients SET stock_physical = ? WHERE id = ?",
     [newPhysical, ingredient_id]
   );
+
+  // LÓGICA DE ALERTAS: Disparar alerta si stock_physical < min_stock
+  if (newPhysical < ingredient.min_stock) {
+    // Verificar si ya existe una alerta activa para este ingrediente
+    const existingAlert = await inventoryDb.get(
+      "SELECT id FROM low_stock_alerts WHERE ingredient_id = ? AND status = 'active' LIMIT 1",
+      [ingredient_id]
+    );
+
+    // Solo crear alerta si no existe una activa
+    if (!existingAlert) {
+      await inventoryDb.run(
+        `
+        INSERT INTO low_stock_alerts (ingredient_id, audit_id, triggered_by_user_id, physical_stock, min_stock)
+        VALUES (?, ?, ?, ?, ?)
+        `,
+        [ingredient_id, auditResult.lastID, req.session.user.id, newPhysical, ingredient.min_stock]
+      );
+    }
+  } else {
+    // Si stock >= min_stock, resolver alertas activas anteriores
+    await inventoryDb.run(
+      "UPDATE low_stock_alerts SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP WHERE ingredient_id = ? AND status = 'active'",
+      [ingredient_id]
+    );
+  }
 
   req.session.success = "Auditoría registrada correctamente.";
   res.redirect("/admin/auditoria");
@@ -471,6 +497,210 @@ router.get("/dashboard/discrepancias", async (req, res) => {
   );
 
   res.render("admin/discrepancies", { title: "Panel de Discrepancias", discrepancies });
+});
+
+// ========== RUTAS PARA MÓDULO DE PROVEEDORES ==========
+
+router.get("/proveedores", async (req, res) => {
+  const search = req.query.search ? req.query.search.trim() : "";
+  
+  let sql = "SELECT * FROM suppliers WHERE 1 = 1";
+  const params = [];
+  
+  if (search) {
+    sql += " AND (name LIKE ? OR email LIKE ? OR phone LIKE ?)";
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+  
+  sql += " ORDER BY name";
+  
+  const suppliers = await inventoryDb.all(sql, params);
+  
+  res.render("admin/suppliers", {
+    title: "Proveedores",
+    suppliers,
+    filters: { search },
+  });
+});
+
+router.get("/proveedores/nuevo", async (req, res) => {
+  res.render("admin/supplier-form", {
+    title: "Nuevo Proveedor",
+    supplier: null,
+  });
+});
+
+router.post("/proveedores", async (req, res) => {
+  const { name, contact_info, phone, email } = req.body;
+  
+  try {
+    await inventoryDb.run(
+      `
+      INSERT INTO suppliers (name, contact_info, phone, email)
+      VALUES (?, ?, ?, ?)
+      `,
+      [name.trim(), contact_info?.trim() || null, phone?.trim() || null, email?.trim() || null]
+    );
+    req.session.success = "Proveedor creado correctamente.";
+    res.redirect("/admin/proveedores");
+  } catch (err) {
+    req.session.error = "Error al crear proveedor: " + err.message;
+    res.redirect("/admin/proveedores/nuevo");
+  }
+});
+
+router.get("/proveedores/:id/editar", async (req, res) => {
+  const supplier = await inventoryDb.get("SELECT * FROM suppliers WHERE id = ?", [req.params.id]);
+  
+  if (!supplier) {
+    req.session.error = "Proveedor no encontrado.";
+    res.redirect("/admin/proveedores");
+    return;
+  }
+  
+  res.render("admin/supplier-form", {
+    title: "Editar Proveedor",
+    supplier,
+  });
+});
+
+router.post("/proveedores/:id/editar", async (req, res) => {
+  const { name, contact_info, phone, email } = req.body;
+  
+  try {
+    await inventoryDb.run(
+      `
+      UPDATE suppliers
+      SET name = ?, contact_info = ?, phone = ?, email = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [name.trim(), contact_info?.trim() || null, phone?.trim() || null, email?.trim() || null, req.params.id]
+    );
+    req.session.success = "Proveedor actualizado correctamente.";
+    res.redirect("/admin/proveedores");
+  } catch (err) {
+    req.session.error = "Error al actualizar proveedor: " + err.message;
+    res.redirect(`/admin/proveedores/${req.params.id}/editar`);
+  }
+});
+
+router.post("/proveedores/:id/eliminar", async (req, res) => {
+  try {
+    await inventoryDb.run("DELETE FROM suppliers WHERE id = ?", [req.params.id]);
+    req.session.success = "Proveedor eliminado correctamente.";
+    res.redirect("/admin/proveedores");
+  } catch (err) {
+    req.session.error = "Error al eliminar proveedor: " + err.message;
+    res.redirect("/admin/proveedores");
+  }
+});
+
+// ========== RUTAS PARA VINCULAR PROVEEDORES CON INGREDIENTES ==========
+
+router.get("/proveedores/:id/ingredientes", async (req, res) => {
+  const supplier = await inventoryDb.get("SELECT * FROM suppliers WHERE id = ?", [req.params.id]);
+  
+  if (!supplier) {
+    req.session.error = "Proveedor no encontrado.";
+    res.redirect("/admin/proveedores");
+    return;
+  }
+  
+  const linkedIngredients = await inventoryDb.all(
+    `
+    SELECT i.*, si.unit_cost, si.id AS link_id
+    FROM supplier_ingredients si
+    JOIN ingredients i ON i.id = si.ingredient_id
+    WHERE si.supplier_id = ?
+    ORDER BY i.name
+    `,
+    [req.params.id]
+  );
+  
+  const allIngredients = await inventoryDb.all(
+    `
+    SELECT i.* FROM ingredients i
+    WHERE i.id NOT IN (
+      SELECT ingredient_id FROM supplier_ingredients WHERE supplier_id = ?
+    )
+    ORDER BY i.name
+    `,
+    [req.params.id]
+  );
+  
+  res.render("admin/supplier-ingredients", {
+    title: `Ingredientes del Proveedor: ${supplier.name}`,
+    supplier,
+    linkedIngredients,
+    allIngredients,
+  });
+});
+
+router.post("/proveedores/:supplier_id/agregar-ingrediente", async (req, res) => {
+  const { ingredient_id, unit_cost } = req.body;
+  
+  try {
+    const supplier = await inventoryDb.get("SELECT id FROM suppliers WHERE id = ?", [
+      req.params.supplier_id,
+    ]);
+    const ingredient = await inventoryDb.get("SELECT id FROM ingredients WHERE id = ?", [ingredient_id]);
+    
+    if (!supplier || !ingredient) {
+      req.session.error = "Proveedor o ingrediente no encontrado.";
+      res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+      return;
+    }
+    
+    await inventoryDb.run(
+      `
+      INSERT OR REPLACE INTO supplier_ingredients (supplier_id, ingredient_id, unit_cost)
+      VALUES (?, ?, ?)
+      `,
+      [req.params.supplier_id, ingredient_id, Number(unit_cost) || 0]
+    );
+    
+    req.session.success = "Ingrediente agregado al proveedor.";
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  } catch (err) {
+    req.session.error = "Error al agregar ingrediente: " + err.message;
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  }
+});
+
+router.post("/proveedores/:supplier_id/actualizar-costo/:link_id", async (req, res) => {
+  const { unit_cost } = req.body;
+  
+  try {
+    await inventoryDb.run(
+      `
+      UPDATE supplier_ingredients
+      SET unit_cost = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND supplier_id = ?
+      `,
+      [Number(unit_cost) || 0, req.params.link_id, req.params.supplier_id]
+    );
+    
+    req.session.success = "Costo actualizado.";
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  } catch (err) {
+    req.session.error = "Error al actualizar costo: " + err.message;
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  }
+});
+
+router.post("/proveedores/:supplier_id/quitar-ingrediente/:link_id", async (req, res) => {
+  try {
+    await inventoryDb.run(
+      "DELETE FROM supplier_ingredients WHERE id = ? AND supplier_id = ?",
+      [req.params.link_id, req.params.supplier_id]
+    );
+    
+    req.session.success = "Ingrediente removido del proveedor.";
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  } catch (err) {
+    req.session.error = "Error al remover ingrediente: " + err.message;
+    res.redirect(`/admin/proveedores/${req.params.supplier_id}/ingredientes`);
+  }
 });
 
 module.exports = router;

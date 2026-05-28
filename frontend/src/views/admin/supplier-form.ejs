@@ -1,0 +1,39 @@
+<%- include("../partials/header") %>
+<%- include("../partials/menu") %>
+
+<h3><%= title %></h3>
+
+<div class="card" style="max-width: 600px;">
+  <div class="card-body">
+    <form method="POST" action="<%= supplier ? `/admin/proveedores/${supplier.id}/editar` : '/admin/proveedores' %>">
+      <div class="mb-3">
+        <label class="form-label">Nombre *</label>
+        <input type="text" class="form-control" name="name" value="<%= supplier?.name || '' %>" required />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Contacto (Persona)</label>
+        <input type="text" class="form-control" name="contact_info" value="<%= supplier?.contact_info || '' %>" placeholder="Ej: Juan García" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Teléfono</label>
+        <input type="tel" class="form-control" name="phone" value="<%= supplier?.phone || '' %>" placeholder="Ej: +34 912 345 678" />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" value="<%= supplier?.email || '' %>" placeholder="Ej: contacto@proveedor.com" />
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <%= supplier ? 'Actualizar Proveedor' : 'Crear Proveedor' %>
+        </button>
+        <a href="/admin/proveedores" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

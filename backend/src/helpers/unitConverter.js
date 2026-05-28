@@ -94,6 +94,7 @@ function getUnitCategory(unit) {
 
 /**
  * Convierte una cantidad de una unidad a otra
+ * Usa aritmética especial para factores de 1000 para evitar errores de precisión de punto flotante.
  * @param {number} quantity - Cantidad a convertir
  * @param {string} fromUnit - Unidad origen
  * @param {string} toUnit - Unidad destino
@@ -124,11 +125,26 @@ function convert(quantity, fromUnit, toUnit) {
     return quantity;
   }
 
-  // Convertir a unidad base de la categoría, luego a unidad destino
-  const toBase = quantity * CONVERSION_FACTORS[f];
-  const fromBase = toBase / CONVERSION_FACTORS[t];
+  const factorFrom = CONVERSION_FACTORS[f];
+  const factorTo = CONVERSION_FACTORS[t];
 
-  return Math.round(fromBase * 100000) / 100000; // Redondear a 5 decimales
+  // Manejo especial para conversiones con factor 1000 (kg↔g, L↔ml)
+  // Usa aritmética entera para evitar errores de punto flotante
+  if (factorFrom === 1000 && factorTo === 1) {
+    // De unidad mayor (kg, L) a menor (g, ml): multiplicar por 1000
+    return Math.round(quantity * 1000);
+  }
+  if (factorFrom === 1 && factorTo === 1000) {
+    // De unidad menor (g, ml) a mayor (kg, L): dividir por 1000
+    return Math.round(quantity) / 1000;
+  }
+
+  // Para otras conversiones, usar el método general
+  const toBase = quantity * factorFrom;
+  const fromBase = toBase / factorTo;
+
+  // Redondear a 5 decimales para otras unidades (oz, lb, cups, etc.)
+  return Math.round(fromBase * 100000) / 100000;
 }
 
 /**

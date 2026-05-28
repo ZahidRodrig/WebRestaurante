@@ -11,14 +11,14 @@ router.get("/dashboard", async (req, res) => {
     SELECT i.*, c.name AS category_name
     FROM ingredients i
     JOIN categories c ON c.id = i.category_id
-    WHERE i.quantity < i.min_stock
+    WHERE i.stock_physical < i.min_stock
     ORDER BY i.name
   `
   );
 
   const recentMovements = await all(
     `
-    SELECT m.*, i.name AS ingredient_name, i.unit AS ingredient_unit
+    SELECT m.*, i.name AS ingredient_name, i.base_unit AS ingredient_unit
     FROM movements m
     JOIN ingredients i ON i.id = m.ingredient_id
     WHERE m.user_id = ?

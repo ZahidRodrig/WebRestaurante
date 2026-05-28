@@ -6,20 +6,20 @@
   <div class="col-md-2"><div class="card p-3">Categorias: <b><%= summary.totalCategories %></b></div></div>
   <div class="col-md-2"><div class="card p-3">Usuarios: <b><%= summary.totalUsers %></b></div></div>
   <div class="col-md-3"><div class="card p-3">Movimientos: <b><%= summary.totalMovements %></b></div></div>
-  <div class="col-md-3"><div class="card p-3">Bajo stock: <b><%= summary.lowStockCount %></b></div></div>
+  <div class="col-md-3"><div class="card p-3">Bajo stock (Alertas): <b><%= summary.lowStockCount %></b></div></div>
 </div>
 <div class="card mt-3">
   <div class="card-body">
-    <h5>Ingredientes en alerta</h5>
+    <h5>Ingredientes en alerta de bajo stock</h5>
     <table class="table table-sm">
-      <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock</th><th>Minimo</th></tr></thead>
+      <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock Físico</th><th>Minimo</th></tr></thead>
       <tbody>
         <% lowStock.forEach((item) => { %>
         <tr class="low-stock">
           <td><%= item.name %></td>
           <td><%= item.category_name %></td>
-          <td><%= item.quantity %> <%= item.unit %></td>
-          <td><%= item.min_stock %> <%= item.unit %></td>
+          <td><%= item.stock_physical.toFixed(2) %> <%= item.base_unit %></td>
+          <td><%= item.min_stock.toFixed(2) %> <%= item.base_unit %></td>
         </tr>
         <% }) %>
         <% if (!lowStock.length) { %><tr><td colspan="4">Sin alertas activas.</td></tr><% } %>

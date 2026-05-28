@@ -116,6 +116,54 @@ async function initDb() {
     )
   `);
 
+  await inventoryDb.run(`
+    CREATE TABLE IF NOT EXISTS low_stock_alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ingredient_id INTEGER NOT NULL,
+      audit_id INTEGER,
+      triggered_by_user_id INTEGER,
+      physical_stock REAL NOT NULL,
+      min_stock REAL NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'acknowledged', 'resolved')),
+      acknowledged_by_user_id INTEGER,
+      acknowledged_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      resolved_at DATETIME,
+      FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE RESTRICT,
+      FOREIGN KEY (audit_id) REFERENCES inventory_audits(id) ON DELETE SET NULL,
+      FOREIGN KEY (triggered_by_user_id) REFERENCES users(id) ON DELETE RESTRICT,
+      FOREIGN KEY (acknowledged_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `);
+
+  // ========== TABLAS PARA MÓDULO DE PROVEEDORES ==========
+
+  await inventoryDb.run(`
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      contact_info TEXT,
+      phone TEXT,
+      email TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await inventoryDb.run(`
+    CREATE TABLE IF NOT EXISTS supplier_ingredients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplier_id INTEGER NOT NULL,
+      ingredient_id INTEGER NOT NULL,
+      unit_cost REAL NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE,
+      FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE,
+      UNIQUE(supplier_id, ingredient_id)
+    )
+  `);
+
   const adminExists = await usersDb.get(
     "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
   );
