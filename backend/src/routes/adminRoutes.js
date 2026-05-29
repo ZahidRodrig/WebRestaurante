@@ -540,6 +540,54 @@ router.post("/menu", handleUpload("image"), async (req, res) => {
   }
 });
 
+router.get("/menu/:id", async (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) return next();
+
+  const menuItem = await inventoryDb.get(
+    `
+    SELECT mi.*, mc.name AS category_name
+    FROM menu_items mi
+    LEFT JOIN menu_categories mc ON mc.id = mi.menu_category_id
+    WHERE mi.id = ?
+    `,
+    [req.params.id]
+  );
+
+  if (!menuItem) {
+    req.session.error = "Platillo no encontrado.";
+    res.redirect("/admin/menu");
+    return;
+  }
+
+  const recipeIngredients = await inventoryDb.all(
+    `
+    SELECT ri.ingredient_id, ri.quantity_required, i.name, i.base_unit
+    FROM recipe_ingredients ri
+    JOIN ingredients i ON i.id = ri.ingredient_id
+    WHERE ri.menu_item_id = ?
+    ORDER BY i.name
+    `,
+    [req.params.id]
+  );
+
+  const recipeSteps = await inventoryDb.all(
+    `
+    SELECT id, step_order, description
+    FROM recipe_steps
+    WHERE menu_item_id = ?
+    ORDER BY step_order
+    `,
+    [req.params.id]
+  );
+
+  res.render("admin/menu-detail", {
+    title: menuItem.name,
+    menuItem,
+    recipeIngredients,
+    recipeSteps,
+  });
+});
+
 router.get("/menu/:id/editar", async (req, res) => {
   const menuItem = await inventoryDb.get("SELECT * FROM menu_items WHERE id = ?", [req.params.id]);
   const menuCategories = await inventoryDb.all("SELECT * FROM menu_categories ORDER BY name");

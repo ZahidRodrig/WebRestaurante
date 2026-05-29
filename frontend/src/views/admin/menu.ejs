@@ -50,7 +50,7 @@
     <tbody>
       <% if (items.length > 0) { %>
         <% items.forEach(function(item) { %>
-          <tr>
+          <tr class="menu-row" data-href="/admin/menu/<%= item.id %>" tabindex="0" role="button" aria-label="Ver receta de <%= item.name %>">
             <td><strong><%= item.name %></strong></td>
             <td><span class="badge bg-secondary"><%= item.category_name || 'Sin categoría' %></span></td>
             <td>$<%= item.price.toFixed(2) %></td>
@@ -63,7 +63,7 @@
                 <span class="badge bg-danger">No disponible</span>
               <% } %>
             </td>
-            <td>
+            <td class="menu-row-actions">
               <a href="/admin/menu/<%= item.id %>/editar" class="btn btn-sm btn-warning">Editar</a>
               <form method="POST" action="/admin/menu/<%= item.id %>/eliminar" style="display:inline;" class="needs-confirm">
                 <button type="submit" class="btn btn-sm btn-danger" data-confirm="¿Eliminar este platillo?">Eliminar</button>
@@ -79,5 +79,27 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  (function () {
+    document.querySelectorAll('tr.menu-row').forEach(function (row) {
+      const href = row.dataset.href;
+      if (!href) return;
+
+      row.addEventListener('click', function (event) {
+        if (event.target.closest('.menu-row-actions')) return;
+        if (event.target.closest('a, button, form, input, select, textarea, label')) return;
+        window.location.href = href;
+      });
+
+      row.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        if (event.target !== row) return;
+        event.preventDefault();
+        window.location.href = href;
+      });
+    });
+  })();
+</script>
 
 <%- include("../partials/footer") %>

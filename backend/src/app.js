@@ -11,6 +11,7 @@ const employeeRoutes = require("./routes/employeeRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ASSET_VERSION = String(Date.now());
 const sessionsDir =
   process.env.RENDER === "true"
     ? "/tmp"
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
   res.locals.error = req.session.error || null;
   res.locals.success = req.session.success || null;
   res.locals.currentPath = cleanPath;
+  res.locals.assetVersion = ASSET_VERSION;
   res.locals.isActivePath = (targetPath) =>
     cleanPath === targetPath || cleanPath.startsWith(`${targetPath}/`);
   delete req.session.error;

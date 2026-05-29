@@ -9,43 +9,6 @@ document.querySelectorAll("form").forEach((form) => {
   });
 });
 
-// --- Auto-dismiss Bootstrap alerts after 3 seconds (fade transition) ---
-function scheduleAlertDismiss(alert) {
-  if (!alert || alert.dataset.dismissScheduled === 'true') return;
-  alert.dataset.dismissScheduled = 'true';
-  if (!alert.classList.contains('fade')) alert.classList.add('fade', 'show');
-
-  setTimeout(() => {
-    alert.classList.remove('show');
-    alert.addEventListener(
-      'transitionend',
-      () => {
-        alert.remove();
-      },
-      { once: true }
-    );
-    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-    bsAlert.close();
-  }, 3000);
-}
-
-function autoDismissAlerts() {
-  document.querySelectorAll('.alert').forEach(scheduleAlertDismiss);
-}
-
-document.addEventListener('DOMContentLoaded', autoDismissAlerts);
-
-const alertObserver = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    mutation.addedNodes.forEach((node) => {
-      if (node.nodeType !== 1) return;
-      if (node.classList?.contains('alert')) scheduleAlertDismiss(node);
-      node.querySelectorAll?.('.alert').forEach(scheduleAlertDismiss);
-    });
-  });
-});
-alertObserver.observe(document.body, { childList: true, subtree: true });
-
 // --- Menu toggle for mobile ---
 const menuToggle = document.getElementById('menu-toggle');
 if (menuToggle) {
@@ -233,6 +196,53 @@ function applyCeilToTheoreticalStock() {
 
 // Ejecutar cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', applyCeilToTheoreticalStock);
+
+// --- Auto-dismiss SOLO para alertas explícitamente "dismissibles" (mensajes flash) ---
+// Importante: las alertas informativas dentro de formularios (p.ej. Stock Teórico
+// y Stock Físico Anterior en /admin/auditoria/nueva) NO llevan .alert-dismissible
+// y por tanto permanecen visibles en todo momento.
+function scheduleAlertDismiss(alert) {
+  if (!alert || alert.dataset.dismissScheduled === 'true') return;
+  if (!alert.classList.contains('alert-dismissible')) return;
+  alert.dataset.dismissScheduled = 'true';
+  if (!alert.classList.contains('fade')) alert.classList.add('fade', 'show');
+
+  setTimeout(() => {
+    if (!alert.isConnected) return;
+    alert.classList.remove('show');
+    alert.addEventListener(
+      'transitionend',
+      () => {
+        alert.remove();
+      },
+      { once: true }
+    );
+    try {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+      bsAlert.close();
+    } catch (_) {
+    }
+  }, 3000);
+}
+
+function autoDismissFlashAlerts() {
+  document.querySelectorAll('.alert.alert-dismissible').forEach(scheduleAlertDismiss);
+}
+
+document.addEventListener('DOMContentLoaded', autoDismissFlashAlerts);
+
+const flashAlertObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType !== 1) return;
+      if (node.classList?.contains('alert') && node.classList.contains('alert-dismissible')) {
+        scheduleAlertDismiss(node);
+      }
+      node.querySelectorAll?.('.alert.alert-dismissible').forEach(scheduleAlertDismiss);
+    });
+  });
+});
+flashAlertObserver.observe(document.body, { childList: true, subtree: true });
 
 // --- Utilidad: limpiar backdrops huérfanos de Bootstrap ---
 function cleanModalBackdrops() {

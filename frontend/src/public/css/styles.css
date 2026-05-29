@@ -100,6 +100,25 @@ body {
   border-left: 4px solid #ffc107;
 }
 
+/* Filas clickeables (lista de menú: clic sobre la fila abre el detalle) */
+tr.menu-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+tr.menu-row:hover {
+  background-color: rgba(13, 110, 253, 0.08);
+}
+
+tr.menu-row:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: -2px;
+}
+
+tr.menu-row .menu-row-actions {
+  cursor: default;
+}
+
 /* Estilos para POS */
 .item-qty {
   padding: 0.375rem 0.5rem;

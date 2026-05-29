@@ -1,0 +1,126 @@
+<%- include("../partials/header") %>
+<% const ingredients = locals.recipeIngredients || []; %>
+<% const steps = locals.recipeSteps || []; %>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <a href="/admin/menu" class="text-decoration-none small text-muted">&larr; Volver al menú</a>
+    <h3 class="mb-0 mt-1"><%= menuItem.name %></h3>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/admin/menu/<%= menuItem.id %>/editar" class="btn btn-warning">Editar</a>
+    <form method="POST" action="/admin/menu/<%= menuItem.id %>/eliminar" class="needs-confirm m-0">
+      <button type="submit" class="btn btn-danger" data-confirm="¿Eliminar este platillo?">Eliminar</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card">
+      <% if (menuItem.image_path) { %>
+        <img
+          src="/uploads/recipes/<%= menuItem.image_path %>"
+          alt="<%= menuItem.name %>"
+          class="card-img-top"
+          style="object-fit: cover; height: 320px;"
+        />
+      <% } else { %>
+        <div
+          class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted"
+          style="height: 320px;"
+        >
+          Sin imagen
+        </div>
+      <% } %>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-sm-5">Estado</dt>
+          <dd class="col-sm-7">
+            <% if (menuItem.is_available) { %>
+              <span class="badge bg-success">Disponible</span>
+            <% } else { %>
+              <span class="badge bg-danger">No disponible</span>
+            <% } %>
+          </dd>
+
+          <dt class="col-sm-5">Categoría</dt>
+          <dd class="col-sm-7"><%= menuItem.category_name || "Sin categoría" %></dd>
+
+          <dt class="col-sm-5">Precio</dt>
+          <dd class="col-sm-7">$<%= Number(menuItem.price).toFixed(2) %></dd>
+
+          <dt class="col-sm-5">Tiempo de preparación</dt>
+          <dd class="col-sm-7"><%= menuItem.prep_time_minutes || 0 %> min</dd>
+
+          <dt class="col-sm-5">Creado</dt>
+          <dd class="col-sm-7"><%= menuItem.created_at %></dd>
+
+          <% if (menuItem.updated_at) { %>
+            <dt class="col-sm-5">Actualizado</dt>
+            <dd class="col-sm-7"><%= menuItem.updated_at %></dd>
+          <% } %>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h5 class="mb-0">Descripción</h5>
+      </div>
+      <div class="card-body">
+        <% if (menuItem.description && menuItem.description.trim()) { %>
+          <p class="mb-0" style="white-space: pre-line;"><%= menuItem.description %></p>
+        <% } else { %>
+          <p class="text-muted mb-0">Sin descripción.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Ingredientes de la receta</h5>
+        <span class="badge bg-info"><%= ingredients.length %></span>
+      </div>
+      <div class="card-body">
+        <% if (ingredients.length) { %>
+          <ul class="list-group list-group-flush">
+            <% ingredients.forEach(function(ri) { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span><%= ri.name %></span>
+                <span class="text-muted">
+                  <strong><%= ri.quantity_required %></strong>
+                  <%= ri.base_unit || "" %>
+                </span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted mb-0">Esta receta aún no tiene ingredientes registrados.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Pasos de preparación</h5>
+        <span class="badge bg-info"><%= steps.length %></span>
+      </div>
+      <div class="card-body">
+        <% if (steps.length) { %>
+          <ol class="ps-3 mb-0">
+            <% steps.forEach(function(step) { %>
+              <li class="mb-2" style="white-space: pre-line;"><%= step.description %></li>
+            <% }) %>
+          </ol>
+        <% } else { %>
+          <p class="text-muted mb-0">Esta receta aún no tiene pasos de preparación registrados.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>
