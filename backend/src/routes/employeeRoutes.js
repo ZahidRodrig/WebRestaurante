@@ -1,6 +1,15 @@
 const express = require("express");
 const { all, get, run } = require("../config/inventoryDb");
 const { ensureRole } = require("../middleware/auth");
+const unitConverter = require("../helpers/unitConverter");
+
+function safeToBaseUnit(quantity, unit) {
+  try {
+    return unitConverter.toBaseUnit(Number(quantity), unit);
+  } catch (e) {
+    return Number(quantity);
+  }
+}
 
 const router = express.Router();
 router.use(ensureRole("empleado", "admin"));
@@ -12,6 +21,9 @@ router.get("/dashboard", async (req, res) => {
     FROM ingredients i
     JOIN categories c ON c.id = i.category_id
     WHERE i.stock_physical < i.min_stock
+      AND EXISTS (
+        SELECT 1 FROM inventory_audits ia WHERE ia.ingredient_id = i.id
+      )
     ORDER BY i.name
   `
   );
@@ -38,7 +50,10 @@ router.get("/dashboard", async (req, res) => {
 router.get("/inventario", async (req, res) => {
   const ingredients = await all(
     `
-    SELECT i.*, c.name AS category_name
+    SELECT
+      i.*,
+      c.name AS category_name,
+      EXISTS (SELECT 1 FROM inventory_audits ia WHERE ia.ingredient_id = i.id) AS has_audit
     FROM ingredients i
     JOIN categories c ON c.id = i.category_id
     ORDER BY i.name
@@ -79,11 +94,12 @@ router.post("/movimiento", async (req, res) => {
 
   const newQuantity =
     type === "entrada" ? ingredient.quantity + amount : ingredient.quantity - amount;
+  const newStockBase = safeToBaseUnit(newQuantity, ingredient.unit);
 
-  await run("UPDATE ingredients SET quantity = ? WHERE id = ?", [
-    newQuantity,
-    ingredient_id,
-  ]);
+  await run(
+    "UPDATE ingredients SET quantity = ?, stock_theoretical = ? WHERE id = ?",
+    [newQuantity, newStockBase, ingredient_id]
+  );
 
   await run(
     `

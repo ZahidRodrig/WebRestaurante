@@ -9,6 +9,43 @@ document.querySelectorAll("form").forEach((form) => {
   });
 });
 
+// --- Auto-dismiss Bootstrap alerts after 3 seconds (fade transition) ---
+function scheduleAlertDismiss(alert) {
+  if (!alert || alert.dataset.dismissScheduled === 'true') return;
+  alert.dataset.dismissScheduled = 'true';
+  if (!alert.classList.contains('fade')) alert.classList.add('fade', 'show');
+
+  setTimeout(() => {
+    alert.classList.remove('show');
+    alert.addEventListener(
+      'transitionend',
+      () => {
+        alert.remove();
+      },
+      { once: true }
+    );
+    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+    bsAlert.close();
+  }, 3000);
+}
+
+function autoDismissAlerts() {
+  document.querySelectorAll('.alert').forEach(scheduleAlertDismiss);
+}
+
+document.addEventListener('DOMContentLoaded', autoDismissAlerts);
+
+const alertObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType !== 1) return;
+      if (node.classList?.contains('alert')) scheduleAlertDismiss(node);
+      node.querySelectorAll?.('.alert').forEach(scheduleAlertDismiss);
+    });
+  });
+});
+alertObserver.observe(document.body, { childList: true, subtree: true });
+
 // --- Menu toggle for mobile ---
 const menuToggle = document.getElementById('menu-toggle');
 if (menuToggle) {
@@ -196,3 +233,162 @@ function applyCeilToTheoreticalStock() {
 
 // Ejecutar cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', applyCeilToTheoreticalStock);
+
+// --- Utilidad: limpiar backdrops huérfanos de Bootstrap ---
+function cleanModalBackdrops() {
+  document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove());
+  if (!document.querySelector('.modal.show')) {
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  }
+}
+
+function ensureModalAtBodyRoot(modalEl) {
+  if (modalEl && modalEl.parentElement !== document.body) {
+    document.body.appendChild(modalEl);
+  }
+}
+
+document.addEventListener('hidden.bs.modal', cleanModalBackdrops);
+
+// --- Modal de categorías de menú (página /admin/menu) ---
+function refreshCategoryFilter() {
+  const filter = document.getElementById('menuFilterCategory');
+  const formSelect = document.getElementById('menuCategorySelect');
+  if (!filter && !formSelect) return;
+
+  fetch('/admin/categorias-menu')
+    .then((r) => r.json())
+    .then((data) => {
+      const current = filter ? filter.value : '';
+
+      if (filter) {
+        filter.innerHTML = '<option value="">Todas las categorías</option>';
+        data.forEach((cat) => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          if (String(current) === String(cat.id)) opt.selected = true;
+          filter.appendChild(opt);
+        });
+      }
+
+      if (formSelect) {
+        const selected = formSelect.value;
+        formSelect.innerHTML = '<option value="">-- Sin categoría --</option>';
+        data.forEach((cat) => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          if (String(selected) === String(cat.id)) opt.selected = true;
+          formSelect.appendChild(opt);
+        });
+      }
+    })
+    .catch(() => {});
+}
+
+function initCategoriesModal() {
+  const modalEl = document.getElementById('categoriesModal');
+  const categoriesList = document.getElementById('categoriesList');
+  const newCategoryInput = document.getElementById('newCategoryName');
+  const addCategoryBtn = document.getElementById('addCategoryBtn');
+
+  if (!modalEl || !categoriesList) return;
+
+  ensureModalAtBodyRoot(modalEl);
+
+  function loadCategories() {
+    fetch('/admin/categorias-menu')
+      .then((r) => r.json())
+      .then((data) => {
+        categoriesList.innerHTML = '<h6 class="mb-2">Categorías existentes:</h6>';
+
+        if (!data.length) {
+          categoriesList.innerHTML += '<p class="text-muted small mb-0">No hay categorías registradas.</p>';
+          return;
+        }
+
+        data.forEach((cat) => {
+          const row = document.createElement('div');
+          row.className = 'd-flex justify-content-between align-items-center p-2 border-bottom';
+          row.innerHTML = `
+            <span>${cat.name}</span>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-sm btn-outline-warning edit-cat-btn">Editar</button>
+              <button type="button" class="btn btn-sm btn-outline-danger delete-cat-btn">Eliminar</button>
+            </div>
+          `;
+
+          row.querySelector('.edit-cat-btn').addEventListener('click', () => {
+            const newName = prompt('Nuevo nombre:', cat.name);
+            if (!newName || !newName.trim()) return;
+
+            fetch(`/admin/categorias-menu/${cat.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: newName.trim() }),
+            })
+              .then(async (r) => {
+                const body = await r.json();
+                if (!r.ok) throw new Error(body.error || 'No se pudo actualizar');
+                loadCategories();
+                refreshCategoryFilter();
+              })
+              .catch((e) => alert('Error: ' + e.message));
+          });
+
+          row.querySelector('.delete-cat-btn').addEventListener('click', () => {
+            if (!confirm('¿Eliminar esta categoría?')) return;
+
+            fetch(`/admin/categorias-menu/${cat.id}`, { method: 'DELETE' })
+              .then(async (r) => {
+                const body = await r.json();
+                if (!r.ok) throw new Error(body.error || 'No se pudo eliminar');
+                loadCategories();
+                refreshCategoryFilter();
+              })
+              .catch((e) => alert('Error: ' + e.message));
+          });
+
+          categoriesList.appendChild(row);
+        });
+      })
+      .catch(() => {
+        categoriesList.innerHTML = '<p class="text-danger small">No se pudieron cargar las categorías.</p>';
+      });
+  }
+
+  modalEl.addEventListener('show.bs.modal', loadCategories);
+  modalEl.addEventListener('hidden.bs.modal', cleanModalBackdrops);
+
+  if (addCategoryBtn && newCategoryInput) {
+    addCategoryBtn.addEventListener('click', () => {
+      const name = newCategoryInput.value.trim();
+      if (!name) {
+        alert('Ingresa un nombre');
+        return;
+      }
+
+      fetch('/admin/categorias-menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+        .then(async (r) => {
+          const body = await r.json();
+          if (!r.ok) throw new Error(body.error || 'No se pudo crear');
+          newCategoryInput.value = '';
+          loadCategories();
+          refreshCategoryFilter();
+        })
+        .catch((e) => alert('Error: ' + e.message));
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  ensureModalAtBodyRoot(document.getElementById('confirmModal'));
+  initCategoriesModal();
+});

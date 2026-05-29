@@ -1,6 +1,39 @@
 const bcrypt = require("bcryptjs");
 const usersDb = require("../config/usersDb");
 const inventoryDb = require("../config/inventoryDb");
+const unitConverter = require("../helpers/unitConverter");
+
+async function addColumnIfMissing(table, column, definition) {
+  const info = await inventoryDb.all(`PRAGMA table_info(${table})`);
+  if (!info.some((col) => col.name === column)) {
+    await inventoryDb.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+async function syncIngredientStocks() {
+  const rows = await inventoryDb.all(
+    "SELECT id, quantity, unit, stock_theoretical FROM ingredients WHERE quantity > 0 AND (stock_theoretical IS NULL OR stock_theoretical = 0)"
+  );
+  for (const row of rows) {
+    try {
+      const stockBase = unitConverter.toBaseUnit(Number(row.quantity), row.unit);
+      await inventoryDb.run(
+        "UPDATE ingredients SET stock_theoretical = ? WHERE id = ?",
+        [stockBase, row.id]
+      );
+    } catch (e) {
+      // Si la unidad no es convertible, dejamos el valor como está
+    }
+  }
+}
+
+async function runMigrations() {
+  await addColumnIfMissing("menu_items", "image_path", "TEXT");
+  await addColumnIfMissing("menu_items", "prep_time_minutes", "INTEGER DEFAULT 0");
+  await addColumnIfMissing("menu_items", "menu_category_id", "INTEGER");
+  await addColumnIfMissing("menu_items", "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+  await syncIngredientStocks();
+}
 
 async function initDb() {
   await inventoryDb.run("PRAGMA foreign_keys = ON");
@@ -41,14 +74,26 @@ async function initDb() {
   `);
 
   await inventoryDb.run(`
+    CREATE TABLE IF NOT EXISTS menu_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await inventoryDb.run(`
     CREATE TABLE IF NOT EXISTS menu_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
       description TEXT,
       price REAL NOT NULL,
       is_available INTEGER NOT NULL DEFAULT 1,
+      image_path TEXT,
+      prep_time_minutes INTEGER DEFAULT 0,
+      menu_category_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (menu_category_id) REFERENCES menu_categories(id) ON DELETE SET NULL
     )
   `);
 
@@ -62,6 +107,17 @@ async function initDb() {
       FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
       FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE RESTRICT,
       UNIQUE(menu_item_id, ingredient_id)
+    )
+  `);
+
+  await inventoryDb.run(`
+    CREATE TABLE IF NOT EXISTS recipe_steps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_item_id INTEGER NOT NULL,
+      step_order INTEGER NOT NULL,
+      description TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
     )
   `);
 
@@ -164,6 +220,8 @@ async function initDb() {
     )
   `);
 
+  await runMigrations();
+
   const adminExists = await usersDb.get(
     "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
   );
@@ -185,6 +243,11 @@ async function initDb() {
     await inventoryDb.run("INSERT INTO categories (name) VALUES (?)", ["Lacteos"]);
     await inventoryDb.run("INSERT INTO categories (name) VALUES (?)", ["Carnes"]);
     await inventoryDb.run("INSERT INTO categories (name) VALUES (?)", ["Verduras"]);
+
+    // Insertar categorías de menú
+    await inventoryDb.run("INSERT INTO menu_categories (name) VALUES (?)", ["Entradas"]);
+    await inventoryDb.run("INSERT INTO menu_categories (name) VALUES (?)", ["Platos Principales"]);
+    await inventoryDb.run("INSERT INTO menu_categories (name) VALUES (?)", ["Ensaladas"]);
 
     // Definir base_unit según el tipo de ingrediente
     const unitConverter = require("../helpers/unitConverter");
@@ -213,11 +276,11 @@ async function initDb() {
     // Insertar algunos items de menú de ejemplo
     await inventoryDb.run(
       `
-      INSERT INTO menu_items (name, description, price, is_available)
+      INSERT INTO menu_items (name, description, price, is_available, menu_category_id, prep_time_minutes)
       VALUES
-      ('Pasta Carbonara', 'Pasta fresca con salsa de queso y jamón', 12.99, 1),
-      ('Pechuga Rellena', 'Pechuga de pollo rellena de jamón y queso', 15.50, 1),
-      ('Ensalada Fresca', 'Ensalada verde con tomate y queso', 8.99, 1)
+      ('Pasta Carbonara', 'Pasta fresca con salsa de queso y jamón', 12.99, 1, 2, 15),
+      ('Pechuga Rellena', 'Pechuga de pollo rellena de jamón y queso', 15.50, 1, 2, 20),
+      ('Ensalada Fresca', 'Ensalada verde con tomate y queso', 8.99, 1, 3, 5)
       `
     );
 

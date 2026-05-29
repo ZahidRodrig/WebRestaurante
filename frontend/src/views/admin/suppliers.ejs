@@ -1,5 +1,6 @@
 <%- include("../partials/header") %>
-<%- include("../partials/menu") %>
+<% const supplierFilters = locals.filters || { search: '' }; %>
+<% const supplierList = locals.suppliers || []; %>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Proveedores</h3>
@@ -8,9 +9,9 @@
 
 <div class="mb-3">
   <form method="GET" action="/admin/proveedores" class="d-flex gap-2">
-    <input type="text" name="search" class="form-control" placeholder="Buscar por nombre, email o teléfono..." value="<%= filters.search %>" />
+    <input type="text" name="search" class="form-control" placeholder="Buscar por nombre, email o teléfono..." value="<%= supplierFilters.search || '' %>" />
     <button class="btn btn-secondary" type="submit">Buscar</button>
-    <% if (filters.search) { %>
+    <% if (supplierFilters.search) { %>
       <a href="/admin/proveedores" class="btn btn-outline-secondary">Limpiar</a>
     <% } %>
   </form>
@@ -28,8 +29,8 @@
       </tr>
     </thead>
     <tbody>
-      <% if (suppliers && suppliers.length > 0) { %>
-        <% suppliers.forEach(supplier => { %>
+      <% if (supplierList.length > 0) { %>
+        <% supplierList.forEach(function(supplier) { %>
           <tr>
             <td><strong><%= supplier.name %></strong></td>
             <td><%= supplier.contact_info || '-' %></td>

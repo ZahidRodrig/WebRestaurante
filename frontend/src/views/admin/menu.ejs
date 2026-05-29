@@ -1,29 +1,60 @@
 <%- include("../partials/header") %>
-<%- include("../partials/menu") %>
+<% const menuFilters = locals.filters || { search: '', category: '', minPrice: '', maxPrice: '' }; %>
+<% const items = locals.menuItems || []; %>
+<% const categories = locals.menuCategories || []; %>
 
-<h3>Menú de Platillos</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Menú de Platillos</h3>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#categoriesModal">⚙️ Categorías</button>
+    <a href="/admin/menu/nuevo" class="btn btn-primary">Nuevo Platillo</a>
+  </div>
+</div>
 
-<a href="/admin/menu/nuevo" class="btn btn-primary mb-3">Nuevo Platillo</a>
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input class="form-control" type="text" name="search" value="<%= menuFilters.search || '' %>" placeholder="Buscar por nombre..." />
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="category" id="menuFilterCategory">
+      <option value="">Todas las categorías</option>
+      <% categories.forEach(function(cat) { %>
+        <option value="<%= cat.id %>" <%= String(menuFilters.category) === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <input class="form-control" type="number" step="0.01" name="minPrice" value="<%= menuFilters.minPrice != null ? menuFilters.minPrice : '' %>" placeholder="Precio min" />
+  </div>
+  <div class="col-md-2">
+    <input class="form-control" type="number" step="0.01" name="maxPrice" value="<%= menuFilters.maxPrice != null ? menuFilters.maxPrice : '' %>" placeholder="Precio max" />
+  </div>
+  <div class="col-md-1">
+    <button class="btn btn-outline-secondary w-100" type="submit">Filtrar</button>
+  </div>
+</form>
 
 <div class="table-responsive">
   <table class="table table-striped table-hover">
     <thead class="table-dark">
       <tr>
         <th>Nombre</th>
-        <th>Descripción</th>
+        <th>Categoría</th>
         <th>Precio</th>
+        <th>Tiempo</th>
         <th>Ingredientes</th>
         <th>Estado</th>
         <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
-      <% if (menuItems && menuItems.length > 0) { %>
-        <% menuItems.forEach(item => { %>
+      <% if (items.length > 0) { %>
+        <% items.forEach(function(item) { %>
           <tr>
             <td><strong><%= item.name %></strong></td>
-            <td><%= item.description || '-' %></td>
+            <td><span class="badge bg-secondary"><%= item.category_name || 'Sin categoría' %></span></td>
             <td>$<%= item.price.toFixed(2) %></td>
+            <td><%= item.prep_time_minutes || 0 %> min</td>
             <td><span class="badge bg-info"><%= item.total_ingredients %></span></td>
             <td>
               <% if (item.is_available) { %>
@@ -33,7 +64,6 @@
               <% } %>
             </td>
             <td>
-              <a href="/admin/recetas/<%= item.id %>" class="btn btn-sm btn-info" title="Editar receta">Receta</a>
               <a href="/admin/menu/<%= item.id %>/editar" class="btn btn-sm btn-warning">Editar</a>
               <form method="POST" action="/admin/menu/<%= item.id %>/eliminar" style="display:inline;" class="needs-confirm">
                 <button type="submit" class="btn btn-sm btn-danger" data-confirm="¿Eliminar este platillo?">Eliminar</button>
@@ -43,7 +73,7 @@
         <% }) %>
       <% } else { %>
         <tr>
-          <td colspan="6" class="text-center">No hay platillos registrados.</td>
+          <td colspan="7" class="text-center text-muted py-4">No hay platillos registrados.</td>
         </tr>
       <% } %>
     </tbody>

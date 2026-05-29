@@ -1,32 +1,22 @@
-<div class="mb-3" id="main-menu-container">
-  <% const isActive = typeof isActivePath === "function" ? isActivePath : () => false; %>
-  <% if (user && user.role === "admin") { %>
-  <div class="btn-group flex-wrap" id="main-menu">
-    <a href="/admin/dashboard" class="btn <%= isActive('/admin/dashboard') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/dashboard') ? 'page' : 'false' %>">Dashboard</a>
-    <a href="/admin/ingredientes" class="btn <%= isActive('/admin/ingredientes') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/ingredientes') ? 'page' : 'false' %>">Ingredientes</a>
-    <a href="/admin/categorias" class="btn <%= isActive('/admin/categorias') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/categorias') ? 'page' : 'false' %>">Categorías</a>
-    <a href="/admin/menu" class="btn <%= isActive('/admin/menu') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/menu') ? 'page' : 'false' %>">Menú</a>
-    <a href="/admin/recetas" class="btn <%= isActive('/admin/recetas') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/recetas') ? 'page' : 'false' %>">Recetas</a>
-    <a href="/admin/auditoria" class="btn <%= isActive('/admin/auditoria') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/auditoria') ? 'page' : 'false' %>">Auditoría</a>
-    <a href="/admin/dashboard/discrepancias" class="btn <%= isActive('/admin/dashboard/discrepancias') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/dashboard/discrepancias') ? 'page' : 'false' %>">Discrepancias</a>
-    <a href="/admin/usuarios" class="btn <%= isActive('/admin/usuarios') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/usuarios') ? 'page' : 'false' %>">Usuarios</a>
-    <a href="/admin/movimientos" class="btn <%= isActive('/admin/movimientos') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/movimientos') ? 'page' : 'false' %>">Movimientos</a>
-    <a href="/admin/proveedores" class="btn <%= isActive('/admin/proveedores') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/proveedores') ? 'page' : 'false' %>">Proveedores</a>
-  </div>
-  <% } else if (user) { %>
-  <div class="btn-group flex-wrap" id="main-menu">
-    <a href="/empleado/dashboard" class="btn <%= isActive('/empleado/dashboard') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/dashboard') ? 'page' : 'false' %>">Dashboard</a>
-    <a href="/empleado/punto-de-venta" class="btn <%= isActive('/empleado/punto-de-venta') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/punto-de-venta') ? 'page' : 'false' %>">POS</a>
-    <a href="/empleado/ordenes" class="btn <%= isActive('/empleado/ordenes') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/ordenes') ? 'page' : 'false' %>">Órdenes</a>
-    <a href="/empleado/inventario" class="btn <%= isActive('/empleado/inventario') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/inventario') ? 'page' : 'false' %>">Inventario</a>
-    <a href="/empleado/mis-movimientos" class="btn <%= isActive('/empleado/mis-movimientos') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/mis-movimientos') ? 'page' : 'false' %>">Mis movimientos</a>
-  </div>
-  <% } %>
+<% const isActive = typeof isActivePath === "function" ? isActivePath : () => false; %>
+<% if (user && user.role === "admin") { %>
+<div class="btn-group flex-wrap py-2" id="main-menu" role="navigation" aria-label="Menú principal">
+  <a href="/admin/dashboard" class="btn btn-sm <%= isActive('/admin/dashboard') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/dashboard') ? 'page' : 'false' %>">Dashboard</a>
+  <a href="/admin/ingredientes" class="btn btn-sm <%= isActive('/admin/ingredientes') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/ingredientes') ? 'page' : 'false' %>">Ingredientes</a>
+  <a href="/admin/categorias" class="btn btn-sm <%= isActive('/admin/categorias') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/categorias') ? 'page' : 'false' %>">Categorías</a>
+  <a href="/admin/menu" class="btn btn-sm <%= isActive('/admin/menu') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/menu') ? 'page' : 'false' %>">Menú</a>
+  <a href="/admin/auditoria" class="btn btn-sm <%= isActive('/admin/auditoria') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/auditoria') ? 'page' : 'false' %>">Auditoría</a>
+  <a href="/admin/discrepancias" class="btn btn-sm <%= isActive('/admin/discrepancias') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/discrepancias') ? 'page' : 'false' %>">Discrepancias</a>
+  <a href="/admin/usuarios" class="btn btn-sm <%= isActive('/admin/usuarios') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/usuarios') ? 'page' : 'false' %>">Usuarios</a>
+  <a href="/admin/movimientos" class="btn btn-sm <%= isActive('/admin/movimientos') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/movimientos') ? 'page' : 'false' %>">Movimientos</a>
+  <a href="/admin/proveedores" class="btn btn-sm <%= isActive('/admin/proveedores') ? 'btn-primary active' : 'btn-outline-primary' %>" aria-current="<%= isActive('/admin/proveedores') ? 'page' : 'false' %>">Proveedores</a>
 </div>
-<style>
-  /* hide menu on small screens; will be toggled by JS */
-  @media (max-width: 767.98px) {
-    #main-menu { display: none; }
-    #main-menu.show { display: flex; flex-wrap:wrap; }
-  }
-</style>
+<% } else if (user) { %>
+<div class="btn-group flex-wrap py-2" id="main-menu" role="navigation" aria-label="Menú principal">
+  <a href="/empleado/dashboard" class="btn btn-sm <%= isActive('/empleado/dashboard') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/dashboard') ? 'page' : 'false' %>">Dashboard</a>
+  <a href="/empleado/punto-de-venta" class="btn btn-sm <%= isActive('/empleado/punto-de-venta') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/punto-de-venta') ? 'page' : 'false' %>">POS</a>
+  <a href="/empleado/ordenes" class="btn btn-sm <%= isActive('/empleado/ordenes') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/ordenes') ? 'page' : 'false' %>">Órdenes</a>
+  <a href="/empleado/inventario" class="btn btn-sm <%= isActive('/empleado/inventario') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/inventario') ? 'page' : 'false' %>">Inventario</a>
+  <a href="/empleado/mis-movimientos" class="btn btn-sm <%= isActive('/empleado/mis-movimientos') ? 'btn-success active' : 'btn-outline-success' %>" aria-current="<%= isActive('/empleado/mis-movimientos') ? 'page' : 'false' %>">Mis movimientos</a>
+</div>
+<% } %>

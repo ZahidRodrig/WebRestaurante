@@ -1,5 +1,4 @@
 <%- include("../partials/header") %>
-<%- include("../partials/menu") %>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Inventario</h3>
   <div class="d-flex gap-2 align-items-center">
@@ -15,11 +14,17 @@
   <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock Físico</th><th>Minimo</th><th>Movimiento</th></tr></thead>
   <tbody>
     <% ingredients.forEach((item) => { %>
-    <tr class="<%= item.stock_physical < item.min_stock ? 'low-stock' : '' %>">
+    <%
+      const audited = Number(item.has_audit) === 1;
+      const isLow = audited && item.stock_physical < item.min_stock;
+    %>
+    <tr class="<%= isLow ? 'low-stock' : '' %>">
       <td>
         <%= item.name %>
-        <% if (item.stock_physical < item.min_stock) { %>
-        <span class="stock-flag" title="Bajo stock" aria-label="Advertencia de bajo stock"></span>
+        <% if (isLow) { %>
+          <span class="stock-flag" title="Bajo stock" aria-label="Advertencia de bajo stock"></span>
+        <% } else if (!audited) { %>
+          <span class="badge bg-secondary ms-1" title="Aún no registrado en auditorías">No auditado</span>
         <% } %>
       </td>
       <td><%= item.category_name %></td>

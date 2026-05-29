@@ -1,48 +1,277 @@
 <%- include("../partials/header") %>
-<%- include("../partials/menu") %>
+<% const item = locals.menuItem || null; %>
+<% const cats = locals.menuCategories || []; %>
+<% const ings = locals.ingredients || []; %>
 
-<h3><%= menuItem ? "Editar Platillo" : "Nuevo Platillo" %></h3>
+<h3><%= item ? "Editar Platillo" : "Nuevo Platillo" %></h3>
 
-<div class="card" style="max-width: 600px;">
-  <div class="card-body">
-    <form method="POST" action="<%= menuItem ? `/admin/menu/${menuItem.id}/editar` : '/admin/menu' %>">
-      <div class="mb-3">
-        <label class="form-label">Nombre del Platillo</label>
-        <input class="form-control" type="text" name="name" value="<%= menuItem?.name || '' %>" required />
-      </div>
+<div class="row">
+  <div class="col-lg-8">
+    <form
+      method="POST"
+      action="<%= item ? `/admin/menu/${item.id}/editar` : '/admin/menu' %>"
+      enctype="multipart/form-data"
+      id="menuForm"
+    >
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Nombre del Platillo *</label>
+            <input class="form-control" type="text" name="name" value="<%= item ? item.name : '' %>" required />
+          </div>
 
-      <div class="mb-3">
-        <label class="form-label">Descripción</label>
-        <textarea class="form-control" name="description" rows="3"><%= menuItem?.description || '' %></textarea>
-      </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" name="description" rows="3"><%= item && item.description ? item.description : '' %></textarea>
+          </div>
 
-      <div class="mb-3">
-        <label class="form-label">Precio ($)</label>
-        <input class="form-control" type="number" step="0.01" name="price" value="<%= menuItem?.price ?? '' %>" required />
-      </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Precio ($) *</label>
+              <input class="form-control" type="number" step="0.01" name="price" value="<%= item && item.price != null ? item.price : '' %>" required />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tiempo de Preparación (minutos)</label>
+              <input class="form-control" type="number" name="prep_time_minutes" value="<%= item ? (item.prep_time_minutes || 0) : 0 %>" min="0" />
+            </div>
+          </div>
 
-      <% if (menuItem) { %>
-        <div class="mb-3">
-          <label class="form-label">Disponible</label>
-          <select class="form-select" name="is_available">
-            <option value="1" <%= menuItem.is_available === 1 ? 'selected' : '' %>>Sí</option>
-            <option value="0" <%= menuItem.is_available === 0 ? 'selected' : '' %>>No</option>
-          </select>
+          <div class="mb-3">
+            <label class="form-label">Categoría de Menú</label>
+            <select class="form-select" name="menu_category_id" id="menuCategorySelect">
+              <option value="">-- Sin categoría --</option>
+              <% cats.forEach(function(cat) { %>
+                <option value="<%= cat.id %>" <%= item && String(item.menu_category_id) === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Imagen del Platillo</label>
+            <input class="form-control" type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp" id="imageInput" />
+            <small class="form-text text-muted">Formatos: JPEG, PNG, GIF, WebP. Máximo 5MB</small>
+            <% if (item && item.image_path) { %>
+              <div class="mt-2">
+                <img
+                  src="/uploads/recipes/<%= item.image_path %>"
+                  alt="<%= item.name %>"
+                  class="img-fluid rounded"
+                  style="max-width: 200px; height: 150px; object-fit: cover;"
+                />
+              </div>
+            <% } %>
+          </div>
+
+          <% if (item) { %>
+            <div class="mb-3">
+              <label class="form-label">Disponible</label>
+              <select class="form-select" name="is_available">
+                <option value="1" <%= item.is_available === 1 ? 'selected' : '' %>>Sí</option>
+                <option value="0" <%= item.is_available === 0 ? 'selected' : '' %>>No</option>
+              </select>
+            </div>
+          <% } %>
         </div>
-      <% } %>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Ingredientes de la receta</h5>
+          <button type="button" class="btn btn-sm btn-success" id="addIngredientBtn">+ Agregar</button>
+        </div>
+        <div class="card-body" id="ingredientsContainer" data-ingredient-exclusion></div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Pasos de preparación</h5>
+          <button type="button" class="btn btn-sm btn-success" id="addStepBtn">+ Agregar paso</button>
+        </div>
+        <div class="card-body" id="stepsContainer"></div>
+      </div>
 
       <button class="btn btn-primary" type="submit">Guardar</button>
       <a href="/admin/menu" class="btn btn-secondary">Volver</a>
     </form>
   </div>
+
+  <div class="col-lg-4">
+    <div class="card sticky-top" style="top: 80px;">
+      <div class="card-header">
+        <h5 class="mb-0">Vista previa</h5>
+      </div>
+      <div class="card-body">
+        <img
+          id="previewImage"
+          src="<%= item && item.image_path ? `/uploads/recipes/${item.image_path}` : '' %>"
+          alt="Vista previa"
+          class="img-fluid rounded mb-3 <%= item && item.image_path ? '' : 'd-none' %>"
+          style="object-fit: cover; height: 200px; width: 100%;"
+        />
+        <h6 id="previewName"><%= item ? item.name : 'Nombre del platillo' %></h6>
+        <p id="previewDesc" class="text-muted small"><%= item && item.description ? item.description : 'Descripción...' %></p>
+        <div class="d-flex justify-content-between align-items-center">
+          <strong id="previewPrice">$<%= item && item.price != null ? Number(item.price).toFixed(2) : '0.00' %></strong>
+          <small class="text-muted" id="previewTime"><%= item ? (item.prep_time_minutes || 0) : 0 %> min</small>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<% if (menuItem) { %>
-  <div class="mt-4">
-    <a href="/admin/recetas/<%= menuItem.id %>" class="btn btn-info">
-      Editar Receta
-    </a>
-  </div>
-<% } %>
+<script>
+const allIngredients = <%- JSON.stringify(ings) %>;
+const initialRecipeIngredients = <%- JSON.stringify(locals.recipeIngredients || []) %>;
+const initialRecipeSteps = <%- JSON.stringify(locals.recipeSteps || []) %>;
+
+const ingredientsContainer = document.getElementById('ingredientsContainer');
+const stepsContainer = document.getElementById('stepsContainer');
+const menuForm = document.getElementById('menuForm');
+
+let recipeIngredientExclusion = null;
+
+function buildIngredientOptions(selectedId) {
+  let html = '<option value="">-- Selecciona ingrediente --</option>';
+  allIngredients.forEach((ing) => {
+    const selected = String(ing.id) === String(selectedId) ? 'selected' : '';
+    const unit = ing.base_unit || 'g';
+    html += `<option value="${ing.id}" data-unit="${unit}" ${selected}>${ing.name}</option>`;
+  });
+  return html;
+}
+
+function updateUnitLabel(select) {
+  const row = select.closest('.ingredient-row');
+  if (!row) return;
+  const option = select.selectedOptions[0];
+  const unit = option && option.dataset.unit ? option.dataset.unit : 'g';
+  row.querySelector('.unit-label').textContent = unit;
+}
+
+function addIngredientRow(ingredientId = '', quantity = '', unit = 'g') {
+  if (!allIngredients.length) {
+    alert('No hay ingredientes registrados. Crea ingredientes antes de armar la receta.');
+    return;
+  }
+
+  const row = document.createElement('div');
+  row.className = 'row g-2 mb-2 align-items-end ingredient-row';
+  row.setAttribute('data-ingredient-row', '');
+  row.innerHTML = `
+    <div class="col-md-6">
+      <select class="form-select ingredient-select mutual-ingredient-select" name="ingredient_ids[]">
+        ${buildIngredientOptions(ingredientId)}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <input type="number" class="form-control" name="ingredient_quantities[]" placeholder="Cantidad" step="0.01" min="0.01" value="${quantity}" />
+    </div>
+    <div class="col-md-2">
+      <small class="text-muted unit-label">${unit}</small>
+    </div>
+    <div class="col-md-1">
+      <button type="button" class="btn btn-sm btn-outline-danger w-100" data-remove-ingredient-row>×</button>
+    </div>
+  `;
+
+  const select = row.querySelector('.ingredient-select');
+  updateUnitLabel(select);
+
+  ingredientsContainer.appendChild(row);
+  if (recipeIngredientExclusion) recipeIngredientExclusion.sync();
+}
+
+function addStepRow(description = '') {
+  const row = document.createElement('div');
+  row.className = 'd-flex gap-2 mb-2 align-items-start step-row';
+  row.innerHTML = `
+    <span class="badge bg-secondary step-order mt-2">1</span>
+    <textarea class="form-control" name="recipe_steps[]" rows="2" placeholder="Describe el paso...">${description}</textarea>
+    <div class="btn-group-vertical">
+      <button type="button" class="btn btn-sm btn-outline-secondary move-step-up" title="Subir">↑</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary move-step-down" title="Bajar">↓</button>
+      <button type="button" class="btn btn-sm btn-outline-danger remove-step">×</button>
+    </div>
+  `;
+
+  row.querySelector('.remove-step').addEventListener('click', () => {
+    row.remove();
+    refreshStepOrder();
+  });
+  row.querySelector('.move-step-up').addEventListener('click', () => {
+    const prev = row.previousElementSibling;
+    if (prev) {
+      stepsContainer.insertBefore(row, prev);
+      refreshStepOrder();
+    }
+  });
+  row.querySelector('.move-step-down').addEventListener('click', () => {
+    const next = row.nextElementSibling;
+    if (next) {
+      stepsContainer.insertBefore(next, row);
+      refreshStepOrder();
+    }
+  });
+
+  stepsContainer.appendChild(row);
+  refreshStepOrder();
+}
+
+function refreshStepOrder() {
+  stepsContainer.querySelectorAll('.step-row').forEach((row, index) => {
+    row.querySelector('.step-order').textContent = index + 1;
+  });
+}
+
+document.getElementById('addIngredientBtn').addEventListener('click', () => addIngredientRow());
+document.getElementById('addStepBtn').addEventListener('click', () => addStepRow());
+
+if (ingredientsContainer && window.IngredientExclusion) {
+  recipeIngredientExclusion = IngredientExclusion.init(
+    ingredientsContainer,
+    '.mutual-ingredient-select',
+    { onSelectChange: (select) => updateUnitLabel(select) }
+  );
+}
+
+if (initialRecipeIngredients.length) {
+  initialRecipeIngredients.forEach((ri) =>
+    addIngredientRow(ri.ingredient_id, ri.quantity_required, ri.base_unit || 'g')
+  );
+} else if (allIngredients.length) {
+  addIngredientRow();
+}
+
+initialRecipeSteps.forEach((step) => addStepRow(step.description));
+
+menuForm.addEventListener('submit', (e) => {
+  document.querySelectorAll('.ingredient-row').forEach((row) => {
+    const id = row.querySelector('[name="ingredient_ids[]"]').value;
+    const qty = row.querySelector('[name="ingredient_quantities[]"]').value;
+    if (!id && !qty) row.remove();
+    else if (!id || !qty) {
+      e.preventDefault();
+      alert('Completa ingrediente y cantidad en cada fila, o elimina la fila vacía.');
+    }
+  });
+});
+
+function updatePreview() {
+  document.getElementById('previewName').textContent = menuForm.name.value || 'Nombre del platillo';
+  document.getElementById('previewDesc').textContent = menuForm.description.value || 'Descripción...';
+  document.getElementById('previewPrice').textContent = '$' + (parseFloat(menuForm.price.value) || 0).toFixed(2);
+  document.getElementById('previewTime').textContent = (parseInt(menuForm.prep_time_minutes.value, 10) || 0) + ' min';
+}
+
+menuForm.addEventListener('input', updatePreview);
+
+document.getElementById('imageInput')?.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const preview = document.getElementById('previewImage');
+  preview.src = URL.createObjectURL(file);
+  preview.classList.remove('d-none');
+});
+</script>
 
 <%- include("../partials/footer") %>

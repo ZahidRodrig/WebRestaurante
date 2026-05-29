@@ -2,6 +2,7 @@ const path = require("path");
 const express = require("express");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
+const fs = require("fs");
 
 const initDb = require("./models/initDb");
 const authRoutes = require("./routes/authRoutes");
@@ -19,7 +20,9 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "..", "frontend", "src", "views"));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "..", "frontend", "src", "public")));
+app.use("/uploads", express.static(path.join(__dirname, "..", "..", "frontend", "src", "public", "uploads")));
 
 app.use(
   session({
@@ -70,6 +73,12 @@ app.use("/empleado", employeeRoutes);
 app.use((req, res) => {
   res.status(404).render("auth/not-found", { title: "No encontrado" });
 });
+
+// Crear carpeta de uploads si no existe
+const uploadsDir = path.join(__dirname, "..", "..", "frontend", "src", "public", "uploads", "recipes");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 initDb()
   .then(() => {

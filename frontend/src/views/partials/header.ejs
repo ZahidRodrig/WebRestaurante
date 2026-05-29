@@ -11,25 +11,33 @@
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4 sticky-top">
-      <div class="container d-flex align-items-center">
-        <a class="navbar-brand me-2" href="/">Inventario Restaurante</a>
-        <button class="btn btn-outline-light d-lg-none me-2" id="menu-toggle" aria-label="Mostrar menú">☰</button>
-        <div class="ms-auto d-flex align-items-center gap-2">
-          <% if (user) { %>
-          <span class="text-white small d-none d-sm-inline"><%= user.name %> (<%= user.role %>)</span>
-          <form action="/logout" method="POST" class="m-0">
-            <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
-          </form>
-          <% } %>
+    <header class="app-header">
+      <nav class="navbar navbar-dark bg-dark app-navbar">
+        <div class="container d-flex align-items-center">
+          <a class="navbar-brand me-2" href="/">Inventario Restaurante</a>
+          <button class="btn btn-outline-light d-lg-none me-2" id="menu-toggle" aria-label="Mostrar menú">☰</button>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <% if (user) { %>
+            <span class="text-white small d-none d-sm-inline"><%= user.name %> (<%= user.role %>)</span>
+            <form action="/logout" method="POST" class="m-0">
+              <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
+            </form>
+            <% } %>
+          </div>
+        </div>
+      </nav>
+      <% if (user) { %>
+      <div class="app-subnav">
+        <div class="container">
+          <%- include("./menu") %>
         </div>
       </div>
-    </nav>
-    <div id="menu-wrapper" class="sticky-top" style="top:56px; z-index:1030;">
-      <main class="container pb-4">
+      <% } %>
+    </header>
+    <main class="container pb-4 pt-3">
       <% if (error) { %>
-      <div class="alert alert-danger"><%= error %></div>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert"><%= error %></div>
       <% } %>
       <% if (success) { %>
-      <div class="alert alert-success"><%= success %></div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert"><%= success %></div>
       <% } %>

@@ -2,6 +2,41 @@ body {
   font-size: 0.95rem;
 }
 
+/* Header pegajoso: navbar + subnav siempre visibles al hacer scroll */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  background-color: var(--bs-light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.app-navbar {
+  margin-bottom: 0 !important;
+}
+
+.app-subnav {
+  background-color: var(--bs-light);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.app-subnav #main-menu {
+  width: 100%;
+  gap: 0.25rem;
+}
+
+.app-subnav #main-menu .btn {
+  white-space: nowrap;
+}
+
+.modal {
+  z-index: 1080 !important;
+}
+
+.modal-backdrop {
+  z-index: 1070 !important;
+}
+
 .low-stock td {
   background-color: #fff3cd !important;
   border-top: 2px solid #8a6d00;
@@ -72,7 +107,7 @@ body {
 }
 
 .card.sticky-top {
-  z-index: 100;
+  z-index: 10;
 }
 
 #cart-items {

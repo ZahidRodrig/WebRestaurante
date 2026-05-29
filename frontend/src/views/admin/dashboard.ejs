@@ -1,30 +1,93 @@
 <%- include("../partials/header") %>
-<%- include("../partials/menu") %>
+
+<% const audited = locals.unauditedIngredients || []; %>
+
 <h3>Dashboard administrador</h3>
+
 <div class="row g-3 my-2">
   <div class="col-md-2"><div class="card p-3">Ingredientes: <b><%= summary.totalIngredients %></b></div></div>
   <div class="col-md-2"><div class="card p-3">Categorias: <b><%= summary.totalCategories %></b></div></div>
   <div class="col-md-2"><div class="card p-3">Usuarios: <b><%= summary.totalUsers %></b></div></div>
   <div class="col-md-3"><div class="card p-3">Movimientos: <b><%= summary.totalMovements %></b></div></div>
-  <div class="col-md-3"><div class="card p-3">Bajo stock (Alertas): <b><%= summary.lowStockCount %></b></div></div>
-</div>
-<div class="card mt-3">
-  <div class="card-body">
-    <h5>Ingredientes en alerta de bajo stock</h5>
-    <table class="table table-sm">
-      <thead><tr><th>Ingrediente</th><th>Categoria</th><th>Stock Físico</th><th>Minimo</th></tr></thead>
-      <tbody>
-        <% lowStock.forEach((item) => { %>
-        <tr class="low-stock">
-          <td><%= item.name %></td>
-          <td><%= item.category_name %></td>
-          <td><%= item.stock_physical.toFixed(2) %> <%= item.base_unit %></td>
-          <td><%= item.min_stock.toFixed(2) %> <%= item.base_unit %></td>
-        </tr>
-        <% }) %>
-        <% if (!lowStock.length) { %><tr><td colspan="4">Sin alertas activas.</td></tr><% } %>
-      </tbody>
-    </table>
+  <div class="col-md-3">
+    <div class="card p-3">
+      Bajo stock (alertas): <b><%= summary.lowStockCount %></b>
+      <% if (summary.unauditedCount > 0) { %>
+        <span class="badge bg-secondary ms-2" title="Ingredientes sin auditoría">Sin auditar: <%= summary.unauditedCount %></span>
+      <% } %>
+    </div>
   </div>
 </div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <h5 class="mb-3">Ingredientes en alerta de bajo stock</h5>
+    <p class="text-muted small mb-2">Solo se incluyen ingredientes con al menos una auditoría registrada.</p>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Ingrediente</th>
+            <th>Categoría</th>
+            <th>Stock físico</th>
+            <th>Mínimo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% lowStock.forEach((item) => { %>
+            <tr class="low-stock">
+              <td><%= item.name %></td>
+              <td><%= item.category_name %></td>
+              <td><%= item.stock_physical.toFixed(2) %> <%= item.base_unit %></td>
+              <td><%= item.min_stock.toFixed(2) %> <%= item.base_unit %></td>
+            </tr>
+          <% }) %>
+          <% if (!lowStock.length) { %>
+            <tr><td colspan="4" class="text-center text-muted">Sin alertas activas.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h5 class="mb-1">Ingredientes sin registro de auditoría</h5>
+        <p class="text-muted small mb-0">Estos ingredientes aún no han sido auditados y por eso no aparecen en las alertas de bajo stock.</p>
+      </div>
+      <% if (audited.length > 0) { %>
+        <a href="/admin/auditoria/nueva" class="btn btn-sm btn-outline-primary">Registrar auditoría</a>
+      <% } %>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Ingrediente</th>
+            <th>Categoría</th>
+            <th>Stock actual</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% audited.forEach((item) => { %>
+            <tr>
+              <td><%= item.name %></td>
+              <td><%= item.category_name %></td>
+              <td><%= Number(item.stock_physical || 0).toFixed(2) %> <%= item.base_unit %></td>
+              <td><span class="badge bg-secondary">No registrado en auditorías</span></td>
+            </tr>
+          <% }) %>
+          <% if (!audited.length) { %>
+            <tr><td colspan="4" class="text-center text-muted">Todos los ingredientes han sido auditados al menos una vez.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <%- include("../partials/footer") %>
